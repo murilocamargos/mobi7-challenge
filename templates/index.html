@@ -348,6 +348,7 @@
                         polyline.remove();
                     }
                     polyline = L.polyline(data['latlon']).addTo(mymap);
+                    mymap.setView(data['center'], data['zoom']);
                 });
             });
 
