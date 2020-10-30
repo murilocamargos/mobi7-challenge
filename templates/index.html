@@ -17,6 +17,13 @@
         <link href="/static/css/styles.css" rel="stylesheet" />
         <link href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css" rel="stylesheet" crossorigin="anonymous" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+         <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
     </head>
     <body class="sb-nav-fixed">
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
@@ -138,13 +145,32 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-xl-12">
+                            <div class="col-xl-6">
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-area mr-1"></i>
                                         Estimativa de tempo total da frota (horas)
                                     </div>
-                                    <div class="card-body"><canvas id="myAreaChart" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myAreaChart" width="100%" height="40"></canvas></div>
+                                </div>
+                            </div>
+                            <div class="col-xl-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <i class="fas fa-chart-area mr-1"></i>
+                                        Percurso: &nbsp; 
+                                        <select name="placa" id="seleciona_placa">
+                                            <option value="">Selecione um carro</option>
+                                            {% for placa in pos.placa.unique() %}
+                                                <option value="{{ placa }}">{{ placa }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <span class="float-right">
+                                            <input type="checkbox" id="show_pois" name="show_pois" value="show_pois" checked>
+                                            <label for="show_pois">Mostrar POIs</label><br>
+                                        </span>
+                                    </div>
+                                    <div class="card-body"><div id="myMapChart" style="height: 230px"></div></div>
                                 </div>
                             </div>
                         </div>
@@ -289,6 +315,48 @@
                         }
                     }
                 });
+            });
+        </script>
+        <script>
+            var mymap = L.map('myMapChart').setView([-25.56742701740896, -51.47653363645077], 3);
+            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox/streets-v11',
+                tileSize: 512,
+                zoomOffset: -1,
+                accessToken: '{{ mapbox_token }}'
+            }).addTo(mymap);
+
+            var pois_pane = mymap.createPane('pois');
+            {% for index, row in poi.iterrows() %}
+            var circle = L.circle([{{ row.latitude }}, {{ row.longitude }}], {
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.5,
+                radius: {{ row.raio }},
+                pane: 'pois'
+            }).addTo(mymap);
+            circle.bindPopup("{{ row.nome }}");
+            {% endfor %}
+
+            var polyline = null;
+
+            $('#seleciona_placa').change(function() {
+                $.get("{{ url_for('api_get_path') }}", { placa: $('#seleciona_placa').val() }, function(data) {
+                    if (polyline !== null) {
+                        polyline.remove();
+                    }
+                    polyline = L.polyline(data['latlon']).addTo(mymap);
+                });
+            });
+
+            $('#show_pois').change(function() {
+                if (this.checked) {
+                    pois_pane.style.display = '';
+                } else {
+                    pois_pane.style.display = 'none';
+                }    
             });
         </script>
     </body>
