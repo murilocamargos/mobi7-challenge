@@ -72,10 +72,7 @@ def zoom_center(lons: tuple=None, lats: tuple=None, lonlats: tuple=None,
     
     maxlon, minlon = max(lons), min(lons)
     maxlat, minlat = max(lats), min(lats)
-    center = {
-        'lon': round((maxlon + minlon) / 2, 6),
-        'lat': round((maxlat + minlat) / 2, 6)
-    }
+    center = [round((maxlat + minlat) / 2, 6), round((maxlon + minlon) / 2, 6)]
     
     # longitudinal range by zoom level (20 to 1)
     # in degrees, if centered at equator
@@ -86,7 +83,7 @@ def zoom_center(lons: tuple=None, lats: tuple=None, lonlats: tuple=None,
     ])
     
     if projection == 'mercator':
-        margin = 3
+        margin = 2
         height = (maxlat - minlat) * margin * width_to_height
         width = (maxlon - minlon) * margin
         lon_zoom = np.interp(width , lon_zoom_range, range(20, 0, -1))
@@ -106,7 +103,8 @@ poi = pd.read_csv('data/base_pois_def.csv')
 
 @app.route("/")
 def index():
-    return render_template('index.html', pos=pos, poi=poi,
+    zoom, center = zoom_center(list(poi.longitude.values), list(poi.latitude.values))
+    return render_template('index.html', pos=pos, poi=poi, zoom=zoom, center=center,
         mapbox_token=os.environ.get("MAPBOX_TOKEN"))
 
 
