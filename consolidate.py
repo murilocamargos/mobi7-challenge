@@ -94,6 +94,9 @@ def feature_eng(pos, add_pois=False):
 
 def get_time_in_poi(car, pos, poi):
     """
+    Get a sequence with all POIs that contained a car with the amount of
+    time spent in the POI.
+
     Parameters
     ----------
     car : str
@@ -146,10 +149,43 @@ def get_time_in_poi(car, pos, poi):
     return positions_with_time
 
 
+def aggregate_positions_with_time(positions_with_time, car):
+    """
+    Parameters
+    ----------
+    positions_with_time : list
+        A sequence with all POIs that contained a car with the amount of
+        time spent in the POI.
+
+    car : str
+        The vehicle identifier.
+    
+    Returns
+    -------
+    df : pd.DataFrame
+        A dataframe with the total and stopped time spent by a car in each
+        POI.
+    """
+    # Sometimes the vehicles are in more than one POI simultaneously.
+    # When this happens, the same amount of time will be recorded for
+    # each POI.
+    spl_pos_with_time = []
+    for pwt in positions_with_time:
+        spl_pos_with_time += [[i, pwt[1], pwt[2]] for i in pwt[0].split(',')]
+    
+    # Create the dataframe with the consolidated result
+    df = pd.DataFrame(spl_pos_with_time, columns=['poi', 'total', 'parado']).\
+        groupby('poi').sum().reset_index()
+    df['placa'] = car
+
+    return df
+
+
 if __name__ == '__main__':
     pos, poi = get_data()
     pos = feature_eng(pos, add_pois=True)
     for car in pos.placa.unique():
         positions_with_time = get_time_in_poi(car, pos, poi)
-        print(positions_with_time)
+        car_at_pois = aggregate_positions_with_time(positions_with_time, car)
+        print(car_at_pois)
     print(pos)
