@@ -52,5 +52,37 @@ def api_get_path():
     return jsonify(res)
 
 
+@app.route('/api/consolidated')
+def api_consolidated():
+    placa = request.args.get('placa')
+    bycar = request.args.get('bycar')
+
+    if placa is not None:
+        df = cons[cons.placa == placa]
+        res = {
+            'poi': list(df.poi.values),
+            'parado': list((df.parado.values/60/60).round(2)),
+            'total': list((df.total.values/60/60).round(2)),
+        }
+
+    elif bycar is not None:
+        df = cons.groupby('placa').sum()
+        res = {
+            'placa': list(df.index.values),
+            'parado': list((df.parado.values/60/60).round(2)),
+            'total': list((df.total.values/60/60).round(2)),
+        }
+    
+    else:
+        df = cons.groupby('poi').sum()
+        res = {
+            'poi': list(df.index.values),
+            'parado': list((df.parado.values/60/60).round(2)),
+            'total': list((df.total.values/60/60).round(2)),
+        }
+
+    return jsonify(res)
+
+
 if __name__ == "__main__":
     app.run(debug=True)

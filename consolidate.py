@@ -99,6 +99,7 @@ def feature_eng(pos, poi, add_pois=False):
     # Find POIs where the car has been
     if add_pois:
         pos['POIs'] = pos.apply(lambda x: find_pois(x, poi), axis=1)
+        pos.loc[pos['POIs'] == '', 'POIs'] = 'Nenhum'
 
     return pos
 
@@ -194,7 +195,7 @@ def aggregate_positions_with_time(positions_with_time, car):
 
 def consolidate_results():
     """Create a CSV file with the results consolidated."""
-    pos, poi = get_data()
+    pos, poi, _ = get_data()
     pos = feature_eng(pos, poi, add_pois=True)
     res = None
     for car in pos.placa.unique():

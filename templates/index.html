@@ -111,9 +111,17 @@
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-area mr-1"></i>
-                                        Estimativa de tempo total da frota (horas)
+                                        Tempo gasto em horas
+                                        &nbsp; 
+                                        <select id="seleciona_view_tempo">
+                                            <option value="1">Frota inteira (por POI)</option>
+                                            <option value="2">Frota inteira (por Veículo)</option>
+                                            {% for placa in pos.placa.unique() %}
+                                                <option value="{{ placa }}">{{ placa }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
-                                    <div class="card-body"><canvas id="myAreaChart" width="100%" height="40"></canvas></div>
+                                    <div class="card-body"><canvas id="myStackedBar" width="100%" height="40"></canvas></div>
                                 </div>
                             </div>
                             <div class="col-xl-6">
@@ -133,53 +141,6 @@
                                         </span>
                                     </div>
                                     <div class="card-body"><div id="myMapChart" style="height: 230px"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <i class="fas fa-table mr-1"></i>
-                                DataTable Example
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                        <thead>
-                                            <tr>
-                                                <th>Placa</th>
-                                                <th>Data/Hora</th>
-                                                <th>Velocidade (km/h)</th>
-                                                <th>Latitude</th>
-                                                <th>Longitude</th>
-                                                <th>Ignição</th>
-                                                <th>Parado</th>
-                                            </tr>
-                                        </thead>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Placa</th>
-                                                <th>Data/Hora</th>
-                                                <th>Velocidade (km/h)</th>
-                                                <th>Latitude</th>
-                                                <th>Longitude</th>
-                                                <th>Ignição</th>
-                                                <th>Parado</th>
-                                            </tr>
-                                        </tfoot>
-                                        <tbody>
-                                            {% for index, row in pos.iterrows() %}
-                                            <tr>
-                                                <td>{{ row.placa }}</td>
-                                                <td>{{ row.data_posicao }}</td>
-                                                <td>{{ row.velocidade }}</td>
-                                                <td>{{ row.latitude|round(6) }}</td>
-                                                <td>{{ row.longitude|round(6) }}</td>
-                                                <td>{{ icon_bool(row.ignicao) }}</td>
-                                                <td>{{ icon_bool(row.parado) }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -203,82 +164,9 @@
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
         <script src="/static/js/scripts.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-        <script src="/static/assets/demo/chart-bar-demo.js"></script>
         <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
         <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js" crossorigin="anonymous"></script>
-        <script src="/static/assets/demo/datatables-demo.js"></script>
 
-        <script>
-            $.get("{{ url_for('api_total_time') }}", function(data) {
-                // Set new default font family and font color to mimic Bootstrap's default styling
-                Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-                Chart.defaults.global.defaultFontColor = '#292b2c';
-
-                // Area Chart Example
-                var ctx = document.getElementById("myAreaChart");
-                var myLineChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data['days'],
-                        datasets: [{
-                            label: "Andando",
-                            lineTension: 0.3,
-                            backgroundColor: "rgba(2,117,216,0.2)",
-                            borderColor: "rgba(2,117,216,1)",
-                            pointRadius: 5,
-                            pointBackgroundColor: "rgba(2,117,216,1)",
-                            pointBorderColor: "rgba(255,255,255,0.8)",
-                            pointHoverRadius: 5,
-                            pointHoverBackgroundColor: "rgba(2,117,216,1)",
-                            pointHitRadius: 50,
-                            pointBorderWidth: 2,
-                            data: data['moving'],
-                        },{
-                            label: "Parado",
-                            lineTension: 0.3,
-                            backgroundColor: "rgba(216,117,2,0.2)",
-                            borderColor: "rgba(216,117,2,1)",
-                            pointRadius: 5,
-                            pointBackgroundColor: "rgba(216,117,2,1)",
-                            pointBorderColor: "rgba(255,255,255,0.8)",
-                            pointHoverRadius: 5,
-                            pointHoverBackgroundColor: "rgba(216,117,2,1)",
-                            pointHitRadius: 50,
-                            pointBorderWidth: 2,
-                            data: data['stopped'],
-                        }],
-                    },
-                    options: {
-                        scales: {
-                        xAxes: [{
-                            time: {
-                            unit: 'date'
-                            },
-                            gridLines: {
-                            display: false
-                            },
-                            ticks: {
-                            maxTicksLimit: 7
-                            }
-                        }],
-                        yAxes: [{
-                            ticks: {
-                            min: 0,
-                            max: Math.max(Math.max(...data['stopped']),Math.max(...data['moving'])),
-                            maxTicksLimit: 5
-                            },
-                            gridLines: {
-                            color: "rgba(0, 0, 0, .125)",
-                            }
-                        }],
-                        },
-                        legend: {
-                        display: false
-                        }
-                    }
-                });
-            });
-        </script>
         <script>
             var mymap = L.map('myMapChart').setView({{ center }}, {{ zoom }});
             L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -320,6 +208,85 @@
                 } else {
                     pois_pane.style.display = 'none';
                 }    
+            });
+
+
+
+            var barChartData = {
+                labels: [],
+                datasets: [{
+                    label: 'Parado',
+                    backgroundColor: "rgb(255, 99, 132)",
+                    data: []
+                }, {
+                    label: 'Total',
+                    backgroundColor: "rgb(54, 162, 235)",
+                    data: []
+                }]
+            };
+
+            var ctx = document.getElementById('myStackedBar').getContext('2d');
+            window.myBar = new Chart(ctx, {
+                type: 'bar',
+                data: barChartData,
+                options: {
+                    title: {
+                        display: true,
+                        text: 'Tempo total da frota gasto em cada POI (em horas)'
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    responsive: true,
+                    scales: {
+                        xAxes: [{
+                            //stacked: true,
+                        }],
+                        yAxes: [{
+                            //stacked: true
+                        }]
+                    }
+                }
+            });
+
+
+
+            var change_bar_plot = function(data, by, title) {
+                barChartData.labels = data[by];
+                barChartData.datasets[0].data = data['parado'];
+                barChartData.datasets[1].data = data['total'];
+                window.myBar.options.title.text = title;
+                window.myBar.update();
+            }
+
+
+
+            $('#seleciona_view_tempo').change(function() {
+                if ($(this).val() == '1') {
+                    // Frota inteira por POI
+                    $.get("{{ url_for('api_consolidated') }}", function(data) {
+                        change_bar_plot(data, 'poi', 'Tempo total da frota gasto em cada POI (em horas)');
+                    });
+                }
+                else if ($(this).val() == '2') {
+                    // Frota inteira por veículo
+                    $.get("{{ url_for('api_consolidated') }}", {bycar: true}, function(data) {
+                        change_bar_plot(data, 'placa', 'Tempo total da frota gasto por cada veículo (em horas)');
+                    });
+                }
+                else {
+                    // Por carro
+                    var car = $(this).val();
+                    $.get("{{ url_for('api_consolidated') }}", {placa: car}, function(data) {
+                        change_bar_plot(data, 'poi', 'Tempo total do carro ' + car + ' gasto em cada POI (em horas)');
+                    });
+                }
+
+            });
+
+            $.get("{{ url_for('api_consolidated') }}", function(data) {
+                change_bar_plot(data, 'poi', 'Tempo total da frota gasto em cada POI (em horas)');
             });
         </script>
     </body>
