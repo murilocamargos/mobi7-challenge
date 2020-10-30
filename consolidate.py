@@ -92,7 +92,64 @@ def feature_eng(pos, add_pois=False):
     return pos
 
 
+def get_time_in_poi(car, pos, poi):
+    """
+    Parameters
+    ----------
+    car : str
+        The vehicle identifier.
+
+    pos : pd.DataFrame
+        A data frame with the available position and state measurements
+        from all vehicles.
+    
+    poi : pd.DataFrame
+        A data frame with all positions of interest with name, radius and
+        coordinates.
+    
+    Returns
+    -------
+    positions_with_time : list[POI, total time, stopped time]
+        A sequence with local aggregations of the total time spent
+        in a POI and the time stopped at that same POI.
+    """
+    # Use the fraction of the dataset related to the car
+    pos_car = pos[pos.placa == car].reset_index().drop('index', axis=1)
+    # List of all positions with time in sequence
+    positions_with_time = []
+    # Process each position measurement against the POIs
+    curr_pos_with_time = [pos_car.POIs[0], 0, 0]
+    for i in range(1, pos_car.shape[0]):
+        if pos_car.POIs[i] == curr_pos_with_time[0]:
+            # If the car didn't get out of the current POI, keep adding time
+            curr_pos_with_time[1] += pos_car.tempo[i]
+            if pos_car.parado[i]:
+                curr_pos_with_time[2] += pos_car.tempo[i]
+        
+        else:
+            # If the car got out of a POI or entered a different POI
+            # split the time elapsed in the measurement between the previous
+            # POI and the next one.
+            curr_pos_with_time[1] += pos_car.tempo[i]/2
+            if pos_car.parado[i]:
+                curr_pos_with_time[2] += pos_car.tempo[i]/2
+            
+            positions_with_time.append(curr_pos_with_time)
+
+            curr_pos_with_time = [pos_car.POIs[i], pos_car.tempo[i]/2, 0]
+            if pos_car.parado[i]:
+                curr_pos_with_time[2] += pos_car.tempo[i]/2
+    
+    # Add last car position to the list of POIs
+    positions_with_time.append(curr_pos_with_time)
+
+    return positions_with_time
+
+
 if __name__ == '__main__':
     pos, poi = get_data()
     pos = feature_eng(pos, add_pois=True)
+    for car in pos.placa.unique():
+        positions_with_time = get_time_in_poi(car, pos, poi)
+        print(positions_with_time)
     print(pos)
