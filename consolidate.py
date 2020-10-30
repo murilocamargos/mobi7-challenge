@@ -1,3 +1,4 @@
+import os.path as path
 import pandas as pd
 from geopy.distance import geodesic
 
@@ -14,10 +15,16 @@ def get_data():
     poi : pd.DataFrame
         A data frame with all positions of interest with name, radius and
         coordinates.
+    
+    cons : pd.DataFrame or None
+        A data frame with the analysis result (if the file exists).
     """
     pos = pd.read_csv('data/posicoes.csv')
     poi = pd.read_csv('data/base_pois_def.csv')
-    return pos, poi
+    cons = None
+    if path.exists('data/resultados_consolidado_POIs.csv'):
+        cons = pd.read_csv('data/resultados_consolidado_POIs.csv')
+    return pos, poi, cons
 
 
 def find_pois(measurement, list_of_pois):

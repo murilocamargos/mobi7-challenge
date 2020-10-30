@@ -13,15 +13,16 @@ app = Flask(__name__)
 
 
 # Global variables with all the data we need for the dashboard
-pos, poi = get_data()
+pos, poi, cons = get_data()
 pos = feature_eng(pos, poi, add_pois=False)
 
 
 @app.route("/")
 def index():
-    zoom, center = zoom_center(list(poi.longitude.values), list(poi.latitude.values))
-    return render_template('index.html', pos=pos, poi=poi, zoom=zoom, center=center,
-        mapbox_token=os.environ.get("MAPBOX_TOKEN"))
+    zoom, center = zoom_center(list(poi.longitude.values),
+        list(poi.latitude.values))
+    return render_template('index.html', pos=pos, poi=poi, zoom=zoom,
+        center=center, cons=cons, mapbox_token=os.environ.get("MAPBOX_TOKEN"))
 
 
 @app.route('/api/total_time')
