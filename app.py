@@ -54,6 +54,9 @@ def api_get_path():
 
 @app.route('/api/consolidated')
 def api_consolidated():
+    if cons is None:
+        return jsonify(False)
+
     placa = request.args.get('placa')
     bycar = request.args.get('bycar')
 
@@ -82,6 +85,14 @@ def api_consolidated():
         }
 
     return jsonify(res)
+
+
+@app.route('/api/check_consolidated')
+def api_check_consolidated():
+    global cons
+    _, _, cons = get_data()
+    return jsonify(cons is not None)
+
 
 
 if __name__ == "__main__":

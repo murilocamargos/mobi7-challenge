@@ -107,7 +107,7 @@
                             <li class="breadcrumb-item active">Dashboard</li>
                         </ol>
                         <div class="row">
-                            <div class="col-xl-6">
+                            <div class="col-xl-6" id="success-consolidated" style="display: none">
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-area mr-1"></i>
@@ -122,6 +122,19 @@
                                         </select>
                                     </div>
                                     <div class="card-body"><canvas id="myStackedBar" width="100%" height="40"></canvas></div>
+                                </div>
+                            </div>
+                            <div class="col-xl-6" id="error-consolidated" style="display: none">
+                                <div class="card mb-4">
+                                    <div class="card-header text-danger">
+                                        <i class="fas fa-times mr-1"></i>
+                                        Erro
+                                    </div>
+                                    <div class="card-body">
+                                        O arquivo consolidado não foi encontrado. Por favor, execute o comando:<br><br>
+                                        <pre class="text-info">python consolidate.py</pre><br>
+                                        <button class="btn btn-success" id="check-again"><i class="fas fa-thumbs-up"></i> &nbsp; Já executei!</button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-xl-6">
@@ -261,15 +274,14 @@
             }
 
 
-
-            $('#seleciona_view_tempo').change(function() {
-                if ($(this).val() == '1') {
+            var change_view_time = function(opt) {
+                if (opt == '1') {
                     // Frota inteira por POI
                     $.get("{{ url_for('api_consolidated') }}", function(data) {
                         change_bar_plot(data, 'poi', 'Tempo total da frota gasto em cada POI (em horas)');
                     });
                 }
-                else if ($(this).val() == '2') {
+                else if (opt == '2') {
                     // Frota inteira por veículo
                     $.get("{{ url_for('api_consolidated') }}", {bycar: true}, function(data) {
                         change_bar_plot(data, 'placa', 'Tempo total da frota gasto por cada veículo (em horas)');
@@ -277,17 +289,36 @@
                 }
                 else {
                     // Por carro
-                    var car = $(this).val();
+                    var car = opt;
                     $.get("{{ url_for('api_consolidated') }}", {placa: car}, function(data) {
                         change_bar_plot(data, 'poi', 'Tempo total do carro ' + car + ' gasto em cada POI (em horas)');
                     });
                 }
+            };
 
+
+            $('#seleciona_view_tempo').change(function() {
+                change_view_time($(this).val());
             });
 
-            $.get("{{ url_for('api_consolidated') }}", function(data) {
-                change_bar_plot(data, 'poi', 'Tempo total da frota gasto em cada POI (em horas)');
+            var check_consolidated = function() {
+                $.get("{{ url_for('api_check_consolidated') }}", function(data) {
+                    if (data === false) {
+                        $('#success-consolidated').hide();
+                        $('#error-consolidated').show();
+                    } else {
+                        $('#success-consolidated').show();
+                        $('#error-consolidated').hide();
+                        change_view_time('1');
+                    }
+                });
+            };
+
+            $('#check-again').click(function() {
+                check_consolidated();
             });
+
+            check_consolidated();
         </script>
     </body>
 </html>
