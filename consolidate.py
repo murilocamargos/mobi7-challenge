@@ -43,11 +43,11 @@ def find_pois(measurement, list_of_pois):
     pois = list_of_pois.apply(lambda poi: geodesic(
         (measurement.latitude, measurement.longitude),
         (poi.latitude, poi.longitude)).meters <= poi.raio, axis=1)
-    pois = ','.join(poi[pois].nome)
+    pois = ','.join(list_of_pois[pois].nome)
     return pois
 
 
-def feature_eng(pos, add_pois=False):
+def feature_eng(pos, poi, add_pois=False):
     """Add and transform features in the positions dataset to facilitate
     the analysis.
 
@@ -56,6 +56,10 @@ def feature_eng(pos, add_pois=False):
     pos : pd.DataFrame
         A data frame with the available position and state measurements
         from all vehicles.
+    
+    poi : pd.DataFrame
+        A data frame with all positions of interest with name, radius and
+        coordinates.
     
     add_pois : bool
         Adds the POIs feature or not. Finding the POIs for all measurements
@@ -181,11 +185,23 @@ def aggregate_positions_with_time(positions_with_time, car):
     return df
 
 
-if __name__ == '__main__':
+def consolidate_results():
+    """Create a CSV file with the results consolidated."""
     pos, poi = get_data()
-    pos = feature_eng(pos, add_pois=True)
+    pos = feature_eng(pos, poi, add_pois=True)
+    res = None
     for car in pos.placa.unique():
         positions_with_time = get_time_in_poi(car, pos, poi)
         car_at_pois = aggregate_positions_with_time(positions_with_time, car)
-        print(car_at_pois)
-    print(pos)
+        
+        if res is None:
+            res = car_at_pois
+        else:
+            res = pd.concat((res, car_at_pois), axis=0).reset_index().\
+                drop('index', axis=1)
+    
+    res.to_csv('data/resultados_consolidado_POIs.csv')
+
+
+if __name__ == '__main__':
+    consolidate_results()
