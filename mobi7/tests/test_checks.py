@@ -4,32 +4,7 @@ import numpy as np
 from pathlib import Path
 
 from mobi7.funcs import check_numeric, check_data, POI_FIELDS, POS_FIELDS
-
-
-def get_valid_position(n=1):
-    positions = [{
-        'placa': 'TESTE001',
-        'data_posicao': 'Wed Dec 12 2018 00:04:03 GMT-0200 (Hora oficial do Brasil)',
-        'velocidade': 0,
-        'longitude': -51.469891,
-        'latitude': -25.3649141,
-        'ignicao': False,
-    } for i in range(n)]
-    if n == 1:
-        return pd.Series(positions[0])
-    return pd.DataFrame(positions)
-
-
-def get_valid_poi(n=1):
-    pois = [{
-        'nome': 'PONTO 1',
-        'raio': 350,
-        'latitude': -25.56742701740896,
-        'longitude': -51.47653363645077,
-    } for i in range(n)]
-    if n == 1:
-        return pd.Series(pois[0])
-    return pd.DataFrame(pois)
+from .helpers import get_valid_position, get_valid_poi
 
 
 def test_check_numeric_type():
@@ -117,6 +92,18 @@ def test_check_data_check_pos_lat_lon():
     with pytest.raises(ValueError) as err:
         check_data(position, 'position', POS_FIELDS, check_as='df')
     assert str(err.value) == 'All `longitude` values must be in [-180,180].'
+
+    position = get_valid_position(5)
+    position.loc[2, 'velocidade'] = -181
+    with pytest.raises(ValueError) as err:
+        check_data(position, 'position', POS_FIELDS, check_as='df')
+    assert str(err.value) == 'All `velocidade` values must be in [0,inf].'
+
+    position = get_valid_position(5)
+    position.loc[2, 'ignicao'] = 0
+    with pytest.raises(TypeError) as err:
+        check_data(position, 'position', POS_FIELDS, check_as='df')
+    assert str(err.value) == 'The `ignicao` field must be boolean.'
 
 
 def test_check_data_check_poi_lat_lon_rad():

@@ -67,6 +67,14 @@ def check_data(data, var_name, fields, check_as='df'):
     
     if 'raio' in data_fields:
         check_numeric(data.raio, 'raio', 0, check_as=check_as)
+    
+    if 'velocidade' in data_fields:
+        check_numeric(data.velocidade, 'velocidade', 0, check_as=check_as)
+    
+    if 'ignicao' in data_fields:
+        if (check_as == 'sr' and type(data.ignicao) != bool) or \
+            (check_as == 'df' and data.ignicao.dtype != bool):
+            raise TypeError(f'The `ignicao` field must be boolean.')
 
 
 def get_data(dir_path='./data'):
@@ -171,6 +179,9 @@ def feature_eng(pos, poi, add_pois=False):
     pos : pd.DataFrame
         The same dataframe with the modified features.
     """
+    check_data(pos, 'pos', POS_FIELDS, 'df')
+    check_data(poi, 'poi', POI_FIELDS, 'df')
+
     # Add column to identify stopped vehicles
     pos['parado'] = (pos.velocidade < 5) & (~pos.ignicao)
 
