@@ -57,7 +57,7 @@ def find_pois(measurement, list_of_pois):
     
     Parameters
     ----------
-    measurement : pd.DataFrame
+    measurement : pd.Series
         An item of the pos data set containing latitude and longitude measures.
 
     poi : pd.DataFrame
@@ -69,6 +69,11 @@ def find_pois(measurement, list_of_pois):
     pois : str
         A comma separated list of all POIs that contains the measurement.
     """
+    if type(measurement) != pd.core.series.Series:
+        raise TypeError('The `measurement` must be a pd.DataFrame.')
+    if type(list_of_pois) != pd.core.frame.DataFrame:
+        raise TypeError('The `list_of_pois` must be a pd.DataFrame.')
+    
     from geopy.distance import geodesic
     
     pois = list_of_pois.apply(lambda poi: geodesic(
