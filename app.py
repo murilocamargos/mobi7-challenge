@@ -125,4 +125,8 @@ def api_get_time():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host=os.environ.get("BACKEND_HOST", "127.0.0.1"),
+        port=5000,
+        debug=True,
+    )

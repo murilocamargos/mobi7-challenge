@@ -1,0 +1,10 @@
+version: '2'
+services:
+    web:
+        build: .
+        environment:
+            - BACKEND_HOST=0.0.0.0
+        ports:
+            - "5000:5000"
+        volumes:
+            - .:/app
