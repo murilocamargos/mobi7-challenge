@@ -1,31 +1,32 @@
 # Mobi7 Dash
 
-## Set environment variables
-1. Rename `.flaskenv-example` to `.flaskenv`.
-2. Copy your MapBox token in the `MAPBOX_TOKEN` line of `.flaskenv`.
+## 1. Running Intructions
+### 1.1. Set environment variables
+1. Download the repo's content.
+2. Rename `.flaskenv-example` to `.flaskenv`.
+3. Copy your MapBox token in the `MAPBOX_TOKEN` line of `.flaskenv`.
+4. Rename `.env-example` to `.env`.
 
-## Run with Docker
-1. Run the docker-compose command:
-```docker-compose up``` 
+### 1.2. Running the dashboard with/without airflow
+#### 1.2.1. With airflow (running with Docker)
+1. Run the docker-compose command: `docker-compose up`
+2. Data can be consolidated through `airflow` admin at: [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
+3. Dashboard can be accessed at: [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
 
-## Run locally without Docker
-1. Create a virtual environment with `python 3.8`: 
-```python -m venv mobi7```
+#### 1.2.2. Without airflow
+1. Create a virtual environment with **python 3.8**: `python -m venv mobi7`
 2. Activate your environment:
-```mobi7\Scripts\activate```
-3. Install the dependencies:
-```pip install -r requirements.txt```
-4. Run the application:
-```python app.py```
-5. If you need to consolidate the results, use:
-```python app.py --consolidate```
-
-## Open the dashboard
-1. Access through your browser:
-```http://127.0.0.1:5000/```
-
+```
+mobi7\Scripts\activate     # Windows
+source mobi7/bin/activate  # Linux
+```
+3. Install the dependencies: `pip install -r requirements.txt`
+4. Run the application: `python app.py`
+5. This mode **does not** use airflow to consolidate data. You'll need to do it manually using: `python app.py --consolidate`
+6. Dashboard can be accessed at: [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
 
 ## References
+- Docs from: Flask, Docker, Bootstrap, jQuery, Apache Airflow.
 - https://towardsdatascience.com/apache-airflow-and-postgresql-with-docker-and-docker-compose-5651766dfa96
 - https://dzone.com/articles/running-apache-airflow-dag-with-docker
 - https://blog.invivoo.com/creating-your-first-apache-airflow-dag/
