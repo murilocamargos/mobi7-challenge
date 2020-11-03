@@ -21,6 +21,7 @@ def check_numeric(data, var_name, vmin=-np.inf, vmax=np.inf, check_as='df'):
         (check_as == 'df' and not check_intv.all()):
         raise ValueError(f'All `{var_name}` values must be in [{vmin},{vmax}].')
 
+
 def check_data(data, var_name, fields, check_as='df'):
     """Check data from positions and POIs.
 
@@ -48,11 +49,13 @@ def check_data(data, var_name, fields, check_as='df'):
                         f'{types[check_as].__name__}.')
     
     data_fields = data.index
+    data_shape = data.shape[0]
     if check_as == 'df':
         data_fields = data.columns
-    
-    if data.shape[0] != len(fields) or (data.shape[0] != len(fields) and\
-        not (data_fields == fields).all()):
+        data_shape = data.shape[1]
+
+    if data_shape != len(fields) or (data_shape != len(fields) and\
+        not (sorted(data_fields) == sorted(fields)).all()):
         raise ValueError(f'The `{var_name}` {types[check_as].__name__} '\
                          f'should have the following fields: {fields}')
     
@@ -63,7 +66,7 @@ def check_data(data, var_name, fields, check_as='df'):
         check_numeric(data.longitude, 'longitude', -180, 180, check_as)
     
     if 'raio' in data_fields:
-        check_numeric(data.longitude, 'raio', 0, check_as=check_as)
+        check_numeric(data.raio, 'raio', 0, check_as=check_as)
 
 
 def get_data(dir_path='./data'):
