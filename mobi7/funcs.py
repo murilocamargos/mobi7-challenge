@@ -8,6 +8,38 @@ POI_FIELDS = ['nome', 'raio', 'latitude', 'longitude']
 RES_FIELDS = ['Unnamed: 0', 'poi', 'total', 'parado', 'placa']
 
 
+def check_data(data, var_name, fields, check_as='df'):
+    """Check data from positions and POIs.
+
+    Parameters
+    ----------
+    data : Series or DataFrame
+        The data to be analyzed. It can be either a Series or a
+        full DataFrame.
+    
+    var_name : str
+        The name of the variables being checked.
+    
+    fields : list[str]
+        The list of required fields that will be checked.
+    
+    check_as : str
+        How the data will be checked, as a Series or as a DataFrame.
+    """
+    types = {'sr': pd.core.series.Series, 'df': pd.core.frame.DataFrame}
+    if check_as not in types:
+        raise ValueError('Please, choose a valid type.')
+    
+    if type(data) != types[check_as]:
+        raise TypeError(f'The variable `{var_name}` must be a '\
+                        f'{types[check_as].__name__}.')
+    
+    if data.shape[0] != len(fields) or (data.shape[0] != len(fields) and\
+        not (data.index == fields).all()):
+        raise ValueError(f'The `{var_name}` {types[check_as].__name__} '\
+                         f'should have the following fields: {fields}')
+
+
 def get_data(dir_path='./data'):
     """Get all data from the CSV files.
 
@@ -75,22 +107,8 @@ def find_pois(measurement, list_of_pois):
     pois : str
         A comma separated list of all POIs that contains the measurement.
     """
-    if type(measurement) != pd.core.series.Series:
-        raise TypeError('The `measurement` must be a pd.Series.')
-    if type(list_of_pois) != pd.core.frame.DataFrame:
-        raise TypeError('The `list_of_pois` must be a pd.DataFrame.')
-    
-    if measurement.shape[0] != len(POS_FIELDS) or\
-        (measurement.shape[0] != len(POS_FIELDS) and\
-            not (measurement.index == POS_FIELDS).all()):
-        raise ValueError(f'The `measurement` series should have the '\
-                         f'following fields: {POS_FIELDS}')
-    
-    if list_of_pois.shape[1] != len(POI_FIELDS) or\
-        (list_of_pois.shape[1] != len(POI_FIELDS) and\
-            not (list_of_pois.columns == POI_FIELDS).all()):
-        raise ValueError(f'The `list_of_pois` dataframe should have the '\
-                         f'following columns: {POI_FIELDS}')
+    check_data(measurement, 'measurement', POS_FIELDS, 'sr')
+    check_data(list_of_pois, 'list_of_pois', POI_FIELDS, 'df')
     
     from geopy.distance import geodesic
     
