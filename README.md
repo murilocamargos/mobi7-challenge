@@ -29,3 +29,5 @@
 - https://towardsdatascience.com/apache-airflow-and-postgresql-with-docker-and-docker-compose-5651766dfa96
 - https://dzone.com/articles/running-apache-airflow-dag-with-docker
 - https://blog.invivoo.com/creating-your-first-apache-airflow-dag/
+- https://stackoverflow.com/questions/58762323/how-to-use-pythonvirtualenvoperator-in-airflow
+- https://github.com/puckel/docker-airflow/issues/101

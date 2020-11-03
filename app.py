@@ -6,7 +6,7 @@ from flask import jsonify
 from flask import request
 import pandas as pd
 import numpy as np
-from mobi7 import get_data, feature_eng, consolidate_results
+from mobi7.funcs import get_data, feature_eng, consolidate_results
 from mobi7.utils import zoom_center
 
 
