@@ -23,7 +23,7 @@ def consolidate_results():
 
     pos, poi, _ = get_data('/data')
 
-    pos = feature_eng(pos, poi, add_pois=True, geodesic=geodesic)
+    pos = feature_eng(pos, poi, add_pois=True)
     res = None
     for car in pos.placa.unique():
         positions_with_time = get_time_in_poi(car, pos, poi)

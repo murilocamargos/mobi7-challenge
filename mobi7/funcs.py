@@ -49,7 +49,7 @@ def get_data(dir_path='./data'):
     return pos, poi, cons
 
 
-def find_pois(measurement, list_of_pois, geodesic=None):
+def find_pois(measurement, list_of_pois):
     """Find the POIs in the database that includes a given measurement.
     The distance function relies on a ellipsoidal model of the earth to
     find the shortest distance on the earth's surface.
@@ -69,8 +69,7 @@ def find_pois(measurement, list_of_pois, geodesic=None):
     pois : str
         A comma separated list of all POIs that contains the measurement.
     """
-    if geodesic is None:
-        from geopy.distance import geodesic
+    from geopy.distance import geodesic
     
     pois = list_of_pois.apply(lambda poi: geodesic(
         (measurement.latitude, measurement.longitude),
@@ -79,7 +78,7 @@ def find_pois(measurement, list_of_pois, geodesic=None):
     return pois
 
 
-def feature_eng(pos, poi, add_pois=False, geodesic=None):
+def feature_eng(pos, poi, add_pois=False):
     """Add and transform features in the positions dataset to facilitate
     the analysis.
 
@@ -102,9 +101,6 @@ def feature_eng(pos, poi, add_pois=False, geodesic=None):
     pos : pd.DataFrame
         The same dataframe with the modified features.
     """
-    if geodesic is None:
-        from geopy.distance import geodesic
-    
     # Add column to identify stopped vehicles
     pos['parado'] = (pos.velocidade < 5) & (~pos.ignicao)
 
@@ -126,7 +122,7 @@ def feature_eng(pos, poi, add_pois=False, geodesic=None):
 
     # Find POIs where the car has been
     if add_pois:
-        pos['POIs'] = pos.apply(lambda x: find_pois(x, poi, geodesic), axis=1)
+        pos['POIs'] = pos.apply(lambda x: find_pois(x, poi), axis=1)
         pos.loc[pos['POIs'] == '', 'POIs'] = 'Nenhum'
 
     return pos
@@ -242,13 +238,11 @@ def consolidate_results(dir_path='./data', provided_poi=None, save_file=True):
         A dataframe with the total and stopped time spent by each car in each
         POI.
     """
-    from geopy.distance import geodesic
-
     pos, poi, _ = get_data(dir_path)
     if provided_poi is not None:
         poi = provided_poi
 
-    pos = feature_eng(pos, poi, add_pois=True, geodesic=geodesic)
+    pos = feature_eng(pos, poi, add_pois=True)
     res = None
     for car in pos.placa.unique():
         positions_with_time = get_time_in_poi(car, pos, poi)
