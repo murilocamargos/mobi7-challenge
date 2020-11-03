@@ -1,10 +1,3 @@
-{% macro icon_bool(var) -%}
-    {% if var %}
-        <i class="fas fa-check-circle" style="color: #28a745"></i>
-    {% else %}
-        <i class="fas fa-times-circle" style="color: #dc3545"></i>
-    {% endif %}
-{%- endmacro %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -25,6 +18,9 @@
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
         integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
         crossorigin=""></script>
+        <style>
+            #car-on-chosen-poi-loader {display: none; position: absolute; top: 50%; margin: -25px 0 0 -25px; left: 50%;}
+        </style>
     </head>
     <body class="sb-nav-fixed">
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
@@ -165,22 +161,40 @@
                                         <i class="fas fa-chart-area mr-1"></i>
                                         Buscar um endereço
                                     </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col">
-                                                <input type="text" class="form-control" placeholder="Address" id="address">
+                                    <div class="row">
+                                        <div class="card-body col-xl-6">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <input type="text" class="form-control" placeholder="Address" id="address">
+                                                </div>
+                                                <div class="col">
+                                                    <input type="text" class="form-control" placeholder="Coordinates" id="coordinates">
+                                                </div>
+                                                <div class="col">
+                                                    <input type="text" class="form-control" placeholder="Radius" id="radius">
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button type="submit" class="btn btn-primary mb-2" id="address-find"><i class="fas fa-search"></i> &nbsp; Buscar</button>
+                                                </div>
                                             </div>
-                                            <div class="col">
-                                                <input type="text" class="form-control" placeholder="Coordinates" id="coordinates">
+                                            <div id="myInteractiveMap" style="height: 230px; margin-top: 10px"></div>
+                                        </div>
+
+                                        <div class="card-body col-xl-6">
+                                            <div class="card border-danger mb-3" id="car-not-found-on-chosen-poi">
+                                                <div class="card-body">
+                                                    <p class="card-text text-danger">
+                                                        Nenhum carro foi encontrado no POI escolhido, aumente o raio ou mude o centro do POI ao lado.
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div class="col">
-                                                <input type="text" class="form-control" placeholder="Radius" id="radius">
+                                            <div class='canvas-wrapper' id="car-found-on-chosen-poi" style="display: none;">
+                                                <canvas id="myStackedBarInteractive" width="100%" height="50"></canvas>
                                             </div>
-                                            <div class="col-auto">
-                                                <button type="submit" class="btn btn-primary mb-2" id="address-find"><i class="fas fa-search"></i> &nbsp; Buscar</button>
+                                            <div class="spinner-border" id="car-on-chosen-poi-loader" role="status">
+                                                <span class="sr-only">Loading...</span>
                                             </div>
                                         </div>
-                                        <div id="myInteractiveMap" style="height: 230px; margin-top: 10px"></div>
                                     </div>
                                 </div>
                             </div>
@@ -281,14 +295,37 @@
                         intersect: false
                     },
                     responsive: true,
-                    scales: {
-                        xAxes: [{
-                            //stacked: true,
-                        }],
-                        yAxes: [{
-                            //stacked: true
-                        }]
-                    }
+                }
+            });
+
+
+            var barChartDataInteractive = {
+                labels: [],
+                datasets: [{
+                    label: 'Parado',
+                    backgroundColor: "rgb(255, 99, 132)",
+                    data: []
+                }, {
+                    label: 'Total',
+                    backgroundColor: "rgb(54, 162, 235)",
+                    data: []
+                }]
+            };
+
+            var ctxInteractive = document.getElementById('myStackedBarInteractive').getContext('2d');
+            window.myBarInteractive = new Chart(ctxInteractive, {
+                type: 'bar',
+                data: barChartDataInteractive,
+                options: {
+                    title: {
+                        display: true,
+                        text: 'Tempo total de cada carro gasto no POI escolhido (em horas)'
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    responsive: true,
                 }
             });
 
@@ -300,6 +337,16 @@
                 barChartData.datasets[1].data = data['total'];
                 window.myBar.options.title.text = title;
                 window.myBar.update();
+            }
+
+
+            var change_bar_plot_interactive = function(data, by, title) {
+                console.log(data);
+                barChartDataInteractive.labels = data[by];
+                barChartDataInteractive.datasets[0].data = data['parado'];
+                barChartDataInteractive.datasets[1].data = data['total'];
+                window.myBarInteractive.options.title.text = title;
+                window.myBarInteractive.update();
             }
 
 
@@ -396,25 +443,40 @@
                 if (!radius) {
                     radius = 100;
                 }
+                if (coords.length == 2) {
                 
-                if (circle !== null) {
-                    circle.remove();
+                    if (circle !== null) {
+                        circle.remove();
+                    }
+                    circle = L.circle(coords, {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: radius,
+                    }).addTo(myintmap);
+
+                    var x = Math.log(radius);
+                    var zoom = 18;
+                    if (radius <= 100) zoom = 18;
+                    else if (radius >= 1000000) zoom = 1;
+                    else zoom = Math.round(-0.0023*Math.pow(x,3) - 0.0696*Math.pow(x,2) + 0.162*x + 18);
+
+                    myintmap.setView(coords, zoom);
+
+                    $('#car-on-chosen-poi-loader').show();
+
+                    $.get("{{ url_for('api_get_time') }}", {lat: coords[0], lon: coords[1], rad: radius}, function(data) {
+                        if (data['parado'].length != 0) {
+                            $('#car-not-found-on-chosen-poi').hide();
+                            $('#car-found-on-chosen-poi').show();
+                            change_bar_plot_interactive(data, 'placa', 'Tempo total de cada carro gasto no POI escolhido (em horas)');
+                        } else {
+                            $('#car-not-found-on-chosen-poi').show();
+                            $('#car-found-on-chosen-poi').hide();
+                        }
+                        $('#car-on-chosen-poi-loader').hide();
+                    });
                 }
-                circle = L.circle(coords, {
-                    color: 'red',
-                    fillColor: '#f03',
-                    fillOpacity: 0.5,
-                    radius: radius,
-                }).addTo(myintmap);
-
-                
-                var x = Math.log(radius);
-                var zoom = 18;
-                if (radius <= 100) zoom = 18;
-                else if (radius >= 1000000) zoom = 1;
-                else zoom = Math.round(-0.0023*Math.pow(x,3) - 0.0696*Math.pow(x,2) + 0.162*x + 18);
-
-                myintmap.setView(coords, zoom);
             });
         </script>
     </body>

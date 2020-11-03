@@ -5,7 +5,7 @@ from flask import jsonify
 from flask import request
 import pandas as pd
 import numpy as np
-from consolidate import get_data, feature_eng
+from consolidate import get_data, feature_eng, consolidate_results
 from utils import zoom_center
 
 
@@ -93,6 +93,35 @@ def api_check_consolidated():
     _, _, cons = get_data()
     return jsonify(cons is not None)
 
+
+@app.route('/api/get_time')
+def api_get_time():
+    params = {
+        'lat': request.args.get('lat'),
+        'lon': request.args.get('lon'),
+        'rad': request.args.get('rad'),
+    }
+
+    for p in params:
+        try:
+            params[p] = float(params[p])
+        except:
+            return jsonify({'error': f'The `{p}` argument must be numeric.'})
+
+    poi = pd.DataFrame([{'nome': 'POI Escolhido', 'raio': params['rad'],\
+        'latitude': params['lat'], 'longitude': params['lon']}])
+
+    cons = consolidate_results(provided_poi=poi, save_file=False)
+    cons = cons.loc[cons.poi == 'POI Escolhido']
+
+    df = cons.groupby('placa').sum()
+    res = {
+        'placa': list(df.index.values),
+        'parado': list((df.parado.values/60/60).round(2)),
+        'total': list((df.total.values/60/60).round(2)),
+    }
+
+    return jsonify(res)
 
 
 if __name__ == "__main__":

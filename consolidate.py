@@ -193,9 +193,28 @@ def aggregate_positions_with_time(positions_with_time, car):
     return df
 
 
-def consolidate_results():
-    """Create a CSV file with the results consolidated."""
+def consolidate_results(provided_poi=None, save_file=True):
+    """Create a CSV file with the results consolidated.
+
+    Parameters
+    ----------
+    provided_poi : pd.DataFrame or None
+        A data frame with the position of interest with radius and
+        coordinates. This will override the POIs CSV file.
+
+    save_file : bool
+        Switch that allows saving or not the results file.
+    
+    Returns
+    -------
+    res : pd.DataFrame
+        A dataframe with the total and stopped time spent by each car in each
+        POI.
+    """
     pos, poi, _ = get_data()
+    if provided_poi is not None:
+        poi = provided_poi
+
     pos = feature_eng(pos, poi, add_pois=True)
     res = None
     for car in pos.placa.unique():
@@ -208,7 +227,10 @@ def consolidate_results():
             res = pd.concat((res, car_at_pois), axis=0).reset_index().\
                 drop('index', axis=1)
     
-    res.to_csv('data/resultados_consolidado_POIs.csv')
+    if save_file:
+        res.to_csv('data/resultados_consolidado_POIs.csv')
+
+    return res
 
 
 if __name__ == '__main__':
