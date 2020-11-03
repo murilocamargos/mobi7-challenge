@@ -306,7 +306,7 @@
                         if (window.roadPath !== null) {
                             window.roadPath.remove();
                         }
-                        window.roadPath = L.window.roadPath(data['latlon']).addTo(window.routeMap);
+                        window.roadPath = L.polyline(data['latlon']).addTo(window.routeMap);
                         window.routeMap.setView(data['center'], data['zoom']);
                     });
                 });
