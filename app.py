@@ -20,26 +20,22 @@ pos = feature_eng(pos, poi, add_pois=False)
 
 @app.route("/")
 def index():
+    """
+    Renders the dashboard's initial page with the positions table, the POIs
+    table, the best zoom and center for all POIs, and the MapBox API token.
+    """
     zoom, center = zoom_center(list(poi.longitude.values),
         list(poi.latitude.values))
     return render_template('index.html', pos=pos, poi=poi, zoom=zoom,
         center=center, cons=cons, mapbox_token=os.environ.get("MAPBOX_TOKEN"))
 
 
-@app.route('/api/total_time')
-def api_total_time():
-    # Resample the dataframe to get daily aggregated measurements
-    df = pos.resample('D', on='data_posicao').sum()
-    
-    return jsonify({
-        'days': [f'{i.month_name()[:3]} {i.day}' for i in df.index],
-        'stopped': list((df.tempo_parado.values/60/60).round()),
-        'moving': list((df.tempo_andando.values/60/60).round())
-    })
-
-
 @app.route('/api/get_path')
 def api_get_path():
+    """
+    API endpoint to obtain the full route by vehicle. Also finds the best zoom
+    and center to display the route.
+    """
     placa = request.args.get('placa')
     df = pos.loc[pos.placa == placa]    
     res = {'latlon': [], 'zoom': 1, 'center': [0, 0]}
@@ -55,6 +51,10 @@ def api_get_path():
 
 @app.route('/api/consolidated')
 def api_consolidated():
+    """
+    API endpoint to get consolidated results to reach the functional
+    requirements.
+    """
     if cons is None:
         return jsonify(False)
 
@@ -62,6 +62,7 @@ def api_consolidated():
     bycar = request.args.get('bycar')
 
     if placa is not None:
+        # Total and stopped time spent in each POI for a given vehicle
         df = cons[cons.placa == placa]
         res = {
             'poi': list(df.poi.values),
@@ -70,6 +71,7 @@ def api_consolidated():
         }
 
     elif bycar is not None:
+        # Total and stopped time spent in each POI aggregated by the vehicles
         df = cons.groupby('placa').sum()
         res = {
             'placa': list(df.index.values),
@@ -78,6 +80,7 @@ def api_consolidated():
         }
     
     else:
+        # Total and stopped time spent by each vehicle aggregated by the POIs
         df = cons.groupby('poi').sum()
         res = {
             'poi': list(df.index.values),
@@ -90,6 +93,10 @@ def api_consolidated():
 
 @app.route('/api/check_consolidated')
 def api_check_consolidated():
+    """
+    API endpoint to check if the consolidated CSV file exists. If it exists,
+    load it to a global variable.
+    """
     global cons
     _, _, cons = get_data()
     return jsonify(cons is not None)
@@ -97,6 +104,10 @@ def api_check_consolidated():
 
 @app.route('/api/get_time')
 def api_get_time():
+    """
+    API endpoint to get the total and stopped time spent by each vehicle in a
+    POIs selected by the user in real-time.
+    """
     params = {
         'lat': request.args.get('lat'),
         'lon': request.args.get('lon'),
