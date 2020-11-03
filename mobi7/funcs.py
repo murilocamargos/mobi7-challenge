@@ -14,12 +14,12 @@ def check_numeric(data, var_name, vmin=-np.inf, vmax=np.inf, check_as='df'):
 
     if (check_as == 'sr' and not isnum(type(data))) or \
         (check_as == 'df' and not isnum(data.dtype)):
-        raise TypeError(f'The `{var_name}` field must be numeric')
+        raise TypeError(f'The `{var_name}` field must be numeric.')
 
     check_intv = (data <= vmax) & (data >= vmin)
     if (check_as == 'sr' and not check_intv) or \
         (check_as == 'df' and not check_intv.all()):
-        raise ValueError(f'All `{var_name}` values must be in [{vmin},{vmax}]')
+        raise ValueError(f'All `{var_name}` values must be in [{vmin},{vmax}].')
 
 def check_data(data, var_name, fields, check_as='df'):
     """Check data from positions and POIs.
@@ -58,6 +58,12 @@ def check_data(data, var_name, fields, check_as='df'):
     
     if 'latitude' in data_fields:
         check_numeric(data.latitude, 'latitude', -90, 90, check_as)
+    
+    if 'longitude' in data_fields:
+        check_numeric(data.longitude, 'longitude', -180, 180, check_as)
+    
+    if 'raio' in data_fields:
+        check_numeric(data.longitude, 'raio', 0, check_as=check_as)
 
 
 def get_data(dir_path='./data'):
