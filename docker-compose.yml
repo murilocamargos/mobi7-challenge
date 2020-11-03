@@ -1,4 +1,4 @@
-version: '2'
+version: "3.8"
 services:
     web:
         build: .
@@ -8,3 +8,48 @@ services:
             - "5000:5000"
         volumes:
             - .:/app
+    postgres:
+        image: postgres
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+    afws:
+        image: apache/airflow
+        hostname: afws
+        restart: always
+        depends_on:
+            - postgres
+        env_file:
+            - .env
+        volumes:
+            - ./dags:/opt/airflow/dags
+            - ./scripts:/opt/airflow/scripts
+            - ./logs:/opt/airflow/logs
+        ports:
+            - "8080:8080"
+        entrypoint: ./scripts/entrypoint.sh
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 32
+    scheduler:
+        image: apache/airflow
+        restart: always
+        depends_on:
+            - postgres
+            - afws
+        env_file:
+            - .env
+        ports:
+            - "8793:8793"
+        volumes:
+            - ./dags:/opt/airflow/dags
+            - ./logs:/opt/airflow/logs
+        command: scheduler
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 59
