@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+import numpy as np
 
 
 POS_FIELDS = ['placa', 'data_posicao', 'velocidade', 'longitude', 'latitude',
@@ -7,6 +8,18 @@ POS_FIELDS = ['placa', 'data_posicao', 'velocidade', 'longitude', 'latitude',
 POI_FIELDS = ['nome', 'raio', 'latitude', 'longitude']
 RES_FIELDS = ['Unnamed: 0', 'poi', 'total', 'parado', 'placa']
 
+
+def check_numeric(data, var_name, vmin=-np.inf, vmax=np.inf, check_as='df'):
+    isnum = lambda x: np.issubdtype(x, np.number)
+
+    if (check_as == 'sr' and not isnum(type(data))) or \
+        (check_as == 'df' and not isnum(data.dtype)):
+        raise TypeError(f'The `{var_name}` field must be numeric')
+
+    check_intv = (data <= vmax) & (data >= vmin)
+    if (check_as == 'sr' and not check_intv) or \
+        (check_as == 'df' and not check_intv.all()):
+        raise ValueError(f'All `{var_name}` values must be in [{vmin},{vmax}]')
 
 def check_data(data, var_name, fields, check_as='df'):
     """Check data from positions and POIs.
@@ -29,15 +42,22 @@ def check_data(data, var_name, fields, check_as='df'):
     types = {'sr': pd.core.series.Series, 'df': pd.core.frame.DataFrame}
     if check_as not in types:
         raise ValueError('Please, choose a valid type.')
-    
+
     if type(data) != types[check_as]:
         raise TypeError(f'The variable `{var_name}` must be a '\
                         f'{types[check_as].__name__}.')
     
+    data_fields = data.index
+    if check_as == 'df':
+        data_fields = data.columns
+    
     if data.shape[0] != len(fields) or (data.shape[0] != len(fields) and\
-        not (data.index == fields).all()):
+        not (data_fields == fields).all()):
         raise ValueError(f'The `{var_name}` {types[check_as].__name__} '\
                          f'should have the following fields: {fields}')
+    
+    if 'latitude' in data_fields:
+        check_numeric(data.latitude, 'latitude', -90, 90, check_as)
 
 
 def get_data(dir_path='./data'):
