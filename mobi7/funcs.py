@@ -2,6 +2,12 @@ from pathlib import Path
 import pandas as pd
 
 
+POS_FIELDS = ['placa', 'data_posicao', 'velocidade', 'longitude', 'latitude',
+              'ignicao']
+POI_FIELDS = ['nome', 'raio', 'latitude', 'longitude']
+RES_FIELDS = ['Unnamed: 0', 'poi', 'total', 'parado', 'placa']
+
+
 def get_data(dir_path='./data'):
     """Get all data from the CSV files.
 
@@ -74,21 +80,17 @@ def find_pois(measurement, list_of_pois):
     if type(list_of_pois) != pd.core.frame.DataFrame:
         raise TypeError('The `list_of_pois` must be a pd.DataFrame.')
     
-    m_fields = ['placa', 'data_posicao', 'velocidade', 'longitude', 'latitude',
-        'ignicao']
-    p_columns = ['nome', 'raio', 'latitude', 'longitude']
-
-    if measurement.shape[0] != len(m_fields) or\
-        (measurement.shape[0] != len(m_fields) and\
-            not (measurement.index == m_fields).all()):
+    if measurement.shape[0] != len(POS_FIELDS) or\
+        (measurement.shape[0] != len(POS_FIELDS) and\
+            not (measurement.index == POS_FIELDS).all()):
         raise ValueError(f'The `measurement` series should have the '\
-                         f'following fields: {m_fields}')
+                         f'following fields: {POS_FIELDS}')
     
-    if list_of_pois.shape[1] != len(p_columns) or\
-        (list_of_pois.shape[1] != len(p_columns) and\
-            not (list_of_pois.columns == p_columns).all()):
+    if list_of_pois.shape[1] != len(POI_FIELDS) or\
+        (list_of_pois.shape[1] != len(POI_FIELDS) and\
+            not (list_of_pois.columns == POI_FIELDS).all()):
         raise ValueError(f'The `list_of_pois` dataframe should have the '\
-                         f'following columns: {p_columns}')
+                         f'following columns: {POI_FIELDS}')
     
     from geopy.distance import geodesic
     

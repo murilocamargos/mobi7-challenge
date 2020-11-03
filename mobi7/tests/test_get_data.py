@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from mobi7.funcs import get_data
+from mobi7.funcs import get_data, POS_FIELDS, POI_FIELDS, RES_FIELDS
 from .helpers import move_files_to_temp_folder
 
 
@@ -12,15 +12,13 @@ def test_get_data_pos_and_poi(tmp_path):
     pos, poi, cons = get_data(str(tmp_path.absolute()))
     
     assert type(pos) == pd.core.frame.DataFrame
-    assert (pos.columns == ['placa', 'data_posicao', 'velocidade', 'longitude',
-        'latitude', 'ignicao']).all()
+    assert (pos.columns == POS_FIELDS).all()
     
     assert type(poi) == pd.core.frame.DataFrame
-    assert (poi.columns == ['nome', 'raio', 'latitude', 'longitude']).all()
+    assert (poi.columns == POI_FIELDS).all()
 
     assert type(cons) == pd.core.frame.DataFrame
-    assert (cons.columns == ['Unnamed: 0', 'poi', 'total', 'parado',
-        'placa']).all()
+    assert (cons.columns == RES_FIELDS).all()
 
 
 def test_get_data_dir_not_exists():
