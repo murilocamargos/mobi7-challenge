@@ -20,7 +20,7 @@
         integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
         crossorigin=""></script>
         <style>
-            #car-on-chosen-poi-loader {display: none; position: absolute; top: 50%; margin: -25px 0 0 -25px; left: 50%;}
+            #carOnChosenPOILoader {display: none; position: absolute; top: 50%; margin: -25px 0 0 -25px; left: 50%;}
         </style>
     </head>
     <body class="sb-nav-fixed">
@@ -53,13 +53,13 @@
                             <li class="breadcrumb-item active">Dashboard</li>
                         </ol>
                         <div class="row">
-                            <div class="col-xl-6" id="success-consolidated" style="display: none">
+                            <div class="col-xl-6" id="consolidatedSuccess" style="display: none">
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-bar mr-1"></i>
                                         Tempo gasto em horas
                                         &nbsp; 
-                                        <select id="seleciona_view_tempo">
+                                        <select id="selectTimeView">
                                             <option value="1">Frota inteira (por POI)</option>
                                             <option value="2">Frota inteira (por Veículo)</option>
                                             {% for placa in pos.placa.unique() %}
@@ -70,7 +70,7 @@
                                     <div class="card-body"><canvas id="myStackedBar" width="100%" height="40"></canvas></div>
                                 </div>
                             </div>
-                            <div class="col-xl-6" id="error-consolidated" style="display: none">
+                            <div class="col-xl-6" id="consolidatedError" style="display: none">
                                 <div class="card mb-4">
                                     <div class="card-header text-danger">
                                         <i class="fas fa-times mr-1"></i>
@@ -79,7 +79,7 @@
                                     <div class="card-body">
                                         O arquivo consolidado não foi encontrado. Por favor, execute o comando:<br><br>
                                         <pre class="text-info">python consolidate.py</pre><br>
-                                        <button class="btn btn-success" id="check-again"><i class="fas fa-thumbs-up"></i> &nbsp; Já executei!</button>
+                                        <button class="btn btn-success" id="checkAgain"><i class="fas fa-thumbs-up"></i> &nbsp; Já executei!</button>
                                     </div>
                                 </div>
                             </div>
@@ -88,18 +88,18 @@
                                     <div class="card-header">
                                         <i class="fas fa-road mr-1"></i>
                                         Percurso: &nbsp; 
-                                        <select name="placa" id="seleciona_placa">
+                                        <select name="placa" id="selectCar">
                                             <option value="">Selecione um carro</option>
                                             {% for placa in pos.placa.unique() %}
                                                 <option value="{{ placa }}">{{ placa }}</option>
                                             {% endfor %}
                                         </select>
                                         <span class="float-right">
-                                            <input type="checkbox" id="show_pois" name="show_pois" value="show_pois" checked>
-                                            <label for="show_pois">Mostrar POIs</label><br>
+                                            <input type="checkbox" id="showPois" name="showPois" value="showPois" checked>
+                                            <label for="showPois">Mostrar POIs</label><br>
                                         </span>
                                     </div>
-                                    <div class="card-body"><div id="myMapChart" style="height: 230px"></div></div>
+                                    <div class="card-body"><div id="routeMap" style="height: 230px"></div></div>
                                 </div>
                             </div>
                         </div>
@@ -126,21 +126,21 @@
                                                     <button type="submit" class="btn btn-primary mb-2" id="address-find"><i class="fas fa-search"></i> &nbsp; Buscar</button>
                                                 </div>
                                             </div>
-                                            <div id="myInteractiveMap" style="height: 230px; margin-top: 10px"></div>
+                                            <div id="addressMap" style="height: 230px; margin-top: 10px"></div>
                                         </div>
 
                                         <div class="card-body col-xl-6">
-                                            <div class="card border-danger mb-3" id="car-not-found-on-chosen-poi">
+                                            <div class="card border-danger mb-3" id="carNotFoundOnChosenPOI">
                                                 <div class="card-body">
                                                     <p class="card-text text-danger">
                                                         Nenhum carro foi encontrado no POI escolhido, aumente o raio ou mude o centro do POI ao lado.
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div class='canvas-wrapper' id="car-found-on-chosen-poi" style="display: none;">
+                                            <div class='canvas-wrapper' id="carFoundOnChosenPOI" style="display: none;">
                                                 <canvas id="myStackedBarInteractive" width="100%" height="50"></canvas>
                                             </div>
-                                            <div class="spinner-border" id="car-on-chosen-poi-loader" role="status">
+                                            <div class="spinner-border" id="carOnChosenPOILoader" role="status">
                                                 <span class="sr-only">Loading...</span>
                                             </div>
                                         </div>
@@ -173,193 +173,160 @@
         <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js" crossorigin="anonymous"></script>
 
         <script>
-            var mymap = L.map('myMapChart').setView({{ center }}, {{ zoom }});
-            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox/streets-v11',
-                tileSize: 512,
-                zoomOffset: -1,
-                accessToken: '{{ mapbox_token }}'
-            }).addTo(mymap);
+            // Variables
+            {% autoescape false %}
+            var routeMapCenter = {{ center }};
+            var routeMapZoom = {{ zoom }};
+            var pois = {{ poi.to_dict('record') }};
+            {% endautoescape %}
+            //
 
-            var pois_pane = mymap.createPane('pois');
-            {% for index, row in poi.iterrows() %}
-            var circle = L.circle([{{ row.latitude }}, {{ row.longitude }}], {
-                color: 'red',
-                fillColor: '#f03',
-                fillOpacity: 0.5,
-                radius: {{ row.raio }},
-                pane: 'pois'
-            }).addTo(mymap);
-            circle.bindPopup("{{ row.nome }}");
-            {% endfor %}
+            var createMap = function(mapId, center, zoom) {
+                var map = L.map(mapId);
+                if (center && zoom) {
+                    map.setView(center, zoom);
+                }
+                L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                    id: 'mapbox/streets-v11',
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    accessToken: '{{ mapbox_token }}'
+                }).addTo(map);
+                return map;
+            };
 
-            var polyline = null;
+            var createBarData = function() {
+                return {
+                    labels: [],
+                    datasets: [{
+                        label: 'Parado',
+                        backgroundColor: "rgb(255, 99, 132)",
+                        data: []
+                    }, {
+                        label: 'Total',
+                        backgroundColor: "rgb(54, 162, 235)",
+                        data: []
+                    }]
+                };
+            };
 
-            $('#seleciona_placa').change(function() {
-                $.get("{{ url_for('api_get_path') }}", { placa: $('#seleciona_placa').val() }, function(data) {
-                    if (polyline !== null) {
-                        polyline.remove();
+            var createBarPlot = function(barPlotId, title, barData) {
+                var ctx = document.getElementById(barPlotId).getContext('2d');
+                return new Chart(ctx, {
+                    type: 'bar',
+                    data: barData,
+                    options: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        responsive: true,
                     }
-                    polyline = L.polyline(data['latlon']).addTo(mymap);
-                    mymap.setView(data['center'], data['zoom']);
                 });
-            });
-
-            $('#show_pois').change(function() {
-                if (this.checked) {
-                    pois_pane.style.display = '';
-                } else {
-                    pois_pane.style.display = 'none';
-                }    
-            });
-
-
-
-            var barChartData = {
-                labels: [],
-                datasets: [{
-                    label: 'Parado',
-                    backgroundColor: "rgb(255, 99, 132)",
-                    data: []
-                }, {
-                    label: 'Total',
-                    backgroundColor: "rgb(54, 162, 235)",
-                    data: []
-                }]
             };
 
-            var ctx = document.getElementById('myStackedBar').getContext('2d');
-            window.myBar = new Chart(ctx, {
-                type: 'bar',
-                data: barChartData,
-                options: {
-                    title: {
-                        display: true,
-                        text: 'Tempo total da frota gasto em cada POI (em horas)'
-                    },
-                    tooltips: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    responsive: true,
+            var addPoisToMap = function(map, pois) {
+                var pane = map.createPane('pois');
+                for (i = 0; i < pois.length; i++) {
+                    var circle = L.circle([pois[i]['latitude'], pois[i]['longitude']], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: pois[i]['raio'],
+                        pane: 'pois'
+                    }).addTo(map);
+                    circle.bindPopup(pois[i]['nome']);
                 }
-            });
-
-
-            var barChartDataInteractive = {
-                labels: [],
-                datasets: [{
-                    label: 'Parado',
-                    backgroundColor: "rgb(255, 99, 132)",
-                    data: []
-                }, {
-                    label: 'Total',
-                    backgroundColor: "rgb(54, 162, 235)",
-                    data: []
-                }]
+                return pane;
             };
 
-            var ctxInteractive = document.getElementById('myStackedBarInteractive').getContext('2d');
-            window.myBarInteractive = new Chart(ctxInteractive, {
-                type: 'bar',
-                data: barChartDataInteractive,
-                options: {
-                    title: {
-                        display: true,
-                        text: 'Tempo total de cada carro gasto no POI escolhido (em horas)'
-                    },
-                    tooltips: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    responsive: true,
-                }
-            });
+            var updateBarPlot = function(bpname, data, by, title) {
+                window[bpname + 'Data'].labels = data[by];
+                window[bpname + 'Data'].datasets[0].data = data['parado'];
+                window[bpname + 'Data'].datasets[1].data = data['total'];
+                window[bpname + 'BarPlot'].options.title.text = title;
+                window[bpname + 'BarPlot'].update();
+            };
 
-
-
-            var change_bar_plot = function(data, by, title) {
-                barChartData.labels = data[by];
-                barChartData.datasets[0].data = data['parado'];
-                barChartData.datasets[1].data = data['total'];
-                window.myBar.options.title.text = title;
-                window.myBar.update();
-            }
-
-
-            var change_bar_plot_interactive = function(data, by, title) {
-                console.log(data);
-                barChartDataInteractive.labels = data[by];
-                barChartDataInteractive.datasets[0].data = data['parado'];
-                barChartDataInteractive.datasets[1].data = data['total'];
-                window.myBarInteractive.options.title.text = title;
-                window.myBarInteractive.update();
-            }
-
-
-            var change_view_time = function(opt) {
+            var changeTimeView = function(opt) {
                 if (opt == '1') {
                     // Frota inteira por POI
                     $.get("{{ url_for('api_consolidated') }}", function(data) {
-                        change_bar_plot(data, 'poi', 'Tempo total da frota gasto em cada POI (em horas)');
+                        updateBarPlot('consolidated', data, 'poi', 'Tempo total da frota gasto em cada POI (em horas)');
                     });
                 }
                 else if (opt == '2') {
                     // Frota inteira por veículo
                     $.get("{{ url_for('api_consolidated') }}", {bycar: true}, function(data) {
-                        change_bar_plot(data, 'placa', 'Tempo total da frota gasto por cada veículo (em horas)');
+                        updateBarPlot('consolidated', data, 'placa', 'Tempo total da frota gasto por cada veículo (em horas)');
                     });
                 }
                 else {
                     // Por carro
                     var car = opt;
                     $.get("{{ url_for('api_consolidated') }}", {placa: car}, function(data) {
-                        change_bar_plot(data, 'poi', 'Tempo total do carro ' + car + ' gasto em cada POI (em horas)');
+                        updateBarPlot('consolidated', data, 'poi', 'Tempo total do carro ' + car + ' gasto em cada POI (em horas)');
                     });
                 }
             };
 
-
-            $('#seleciona_view_tempo').change(function() {
-                change_view_time($(this).val());
-            });
-
-            var check_consolidated = function() {
+            var checkConsolidated = function() {
                 $.get("{{ url_for('api_check_consolidated') }}", function(data) {
                     if (data === false) {
-                        $('#success-consolidated').hide();
-                        $('#error-consolidated').show();
+                        $('#consolidatedSuccess').hide();
+                        $('#consolidatedError').show();
                     } else {
-                        $('#success-consolidated').show();
-                        $('#error-consolidated').hide();
-                        change_view_time('1');
+                        $('#consolidatedSuccess').show();
+                        $('#consolidatedError').hide();
+                        changeTimeView('1');
                     }
                 });
             };
 
-            $('#check-again').click(function() {
-                check_consolidated();
-            });
-
-            check_consolidated();
-
-
-
-            var myintmap = L.map('myInteractiveMap');
-            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox/streets-v11',
-                tileSize: 512,
-                zoomOffset: -1,
-                accessToken: '{{ mapbox_token }}'
-            }).addTo(myintmap);
-
-            var intcircle = null;
+            window.routeMap = createMap('routeMap', routeMapCenter, routeMapZoom);
+            window.addressMap = createMap('addressMap');
+            window.poisPane = addPoisToMap(window.routeMap, pois);
+            window.roadPath = null;
+            window.consolidatedData = createBarData();
+            window.consolidatedBarPlot = createBarPlot('myStackedBar', 'Tempo total da frota gasto em cada POI (em horas)', window.consolidatedData);
+            window.onlineData = createBarData();
+            window.onlineBarPlot = createBarPlot('myStackedBarInteractive', 'Tempo total de cada carro gasto no POI escolhido (em horas)', window.onlineData);
+            window.onlineCircle = null;
+            checkConsolidated();
 
             $(function(){
+                $('#selectCar').change(function() {
+                    $.get("{{ url_for('api_get_path') }}", { placa: $('#selectCar').val() }, function(data) {
+                        if (window.roadPath !== null) {
+                            window.roadPath.remove();
+                        }
+                        window.roadPath = L.window.roadPath(data['latlon']).addTo(window.routeMap);
+                        window.routeMap.setView(data['center'], data['zoom']);
+                    });
+                });
+
+                $('#showPois').change(function() {
+                    if (this.checked) {
+                        window.poisPane.style.display = '';
+                    } else {
+                        window.poisPane.style.display = 'none';
+                    }    
+                });
+
+                $('#selectTimeView').change(function() {
+                    changeTimeView($(this).val());
+                });
+
+                $('#checkAgain').click(function() {
+                    checkConsolidated();
+                });
+
                 $("#address").autocomplete({
                     source: function( request, response ) {
                         $.ajax({
@@ -384,48 +351,48 @@
                         return false;
                     }
                 });
-            });
 
-            $('#address-find').click(function() {
-                var radius = $("#radius").val();
-                var coords = $("#coordinates").val().split(',').map(e => parseFloat(e));
-                if (!radius) {
-                    radius = 100;
-                }
-                if (coords.length == 2) {
-                
-                    if (circle !== null) {
-                        circle.remove();
+                $('#address-find').click(function() {
+                    var radius = $("#radius").val();
+                    var coords = $("#coordinates").val().split(',').map(e => parseFloat(e));
+                    if (!radius) {
+                        radius = 100;
                     }
-                    circle = L.circle(coords, {
-                        color: 'red',
-                        fillColor: '#f03',
-                        fillOpacity: 0.5,
-                        radius: radius,
-                    }).addTo(myintmap);
-
-                    var x = Math.log(radius);
-                    var zoom = 18;
-                    if (radius <= 100) zoom = 18;
-                    else if (radius >= 1000000) zoom = 1;
-                    else zoom = Math.round(-0.0023*Math.pow(x,3) - 0.0696*Math.pow(x,2) + 0.162*x + 18);
-
-                    myintmap.setView(coords, zoom);
-
-                    $('#car-on-chosen-poi-loader').show();
-
-                    $.get("{{ url_for('api_get_time') }}", {lat: coords[0], lon: coords[1], rad: radius}, function(data) {
-                        if (data['parado'].length != 0) {
-                            $('#car-not-found-on-chosen-poi').hide();
-                            $('#car-found-on-chosen-poi').show();
-                            change_bar_plot_interactive(data, 'placa', 'Tempo total de cada carro gasto no POI escolhido (em horas)');
-                        } else {
-                            $('#car-not-found-on-chosen-poi').show();
-                            $('#car-found-on-chosen-poi').hide();
+                    if (coords.length == 2) {
+                    
+                        if (window.onlineCircle !== null) {
+                            window.onlineCircle.remove();
                         }
-                        $('#car-on-chosen-poi-loader').hide();
-                    });
-                }
+                        window.onlineCircle = L.circle(coords, {
+                            color: 'red',
+                            fillColor: '#f03',
+                            fillOpacity: 0.5,
+                            radius: radius,
+                        }).addTo(window.addressMap);
+
+                        var x = Math.log(radius);
+                        var zoom = 18;
+                        if (radius <= 100) zoom = 18;
+                        else if (radius >= 1000000) zoom = 1;
+                        else zoom = Math.round(-0.0023*Math.pow(x,3) - 0.0696*Math.pow(x,2) + 0.162*x + 18);
+
+                        window.addressMap.setView(coords, zoom);
+
+                        $('#carOnChosenPOILoader').show();
+
+                        $.get("{{ url_for('api_get_time') }}", {lat: coords[0], lon: coords[1], rad: radius}, function(data) {
+                            if (data['parado'].length != 0) {
+                                $('#carNotFoundOnChosenPOI').hide();
+                                $('#carFoundOnChosenPOI').show();
+                                updateBarPlot('online', data, 'placa', 'Tempo total de cada carro gasto no POI escolhido (em horas)');
+                            } else {
+                                $('#carNotFoundOnChosenPOI').show();
+                                $('#carFoundOnChosenPOI').hide();
+                            }
+                            $('#carOnChosenPOILoader').hide();
+                        });
+                    }
+                });
             });
         </script>
     </body>
