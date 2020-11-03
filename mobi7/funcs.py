@@ -70,9 +70,25 @@ def find_pois(measurement, list_of_pois):
         A comma separated list of all POIs that contains the measurement.
     """
     if type(measurement) != pd.core.series.Series:
-        raise TypeError('The `measurement` must be a pd.DataFrame.')
+        raise TypeError('The `measurement` must be a pd.Series.')
     if type(list_of_pois) != pd.core.frame.DataFrame:
         raise TypeError('The `list_of_pois` must be a pd.DataFrame.')
+    
+    m_fields = ['placa', 'data_posicao', 'velocidade', 'longitude', 'latitude',
+        'ignicao']
+    p_columns = ['nome', 'raio', 'latitude', 'longitude']
+
+    if measurement.shape[0] != len(m_fields) or\
+        (measurement.shape[0] != len(m_fields) and\
+            not (measurement.index == m_fields).all()):
+        raise ValueError(f'The `measurement` series should have the '\
+                         f'following fields: {m_fields}')
+    
+    if list_of_pois.shape[1] != len(p_columns) or\
+        (list_of_pois.shape[1] != len(p_columns) and\
+            not (list_of_pois.columns == p_columns).all()):
+        raise ValueError(f'The `list_of_pois` dataframe should have the '\
+                         f'following columns: {p_columns}')
     
     from geopy.distance import geodesic
     
