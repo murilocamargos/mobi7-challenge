@@ -1,6 +1,38 @@
+# We'll start by importing the DAG object
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from datetime import datetime
+# We need to import the operators used in our tasks
+from airflow.operators.bash_operator import BashOperator
+# We then import the days_ago function
+from airflow.utils.dates import days_ago
+from datetime import timedelta
 
-with DAG('example_dag', start_date=datetime(2016, 1, 1)) as dag:
-    op = DummyOperator(task_id='op')
+# initializing the default arguments that we'll pass to our DAG
+default_args = {
+    'owner': 'airflow',
+    'start_date': days_ago(5),
+    'email': ['airflow@my_first_dag.com'],
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+my_first_dag = DAG(
+    'first_dag',
+    default_args=default_args,
+    description='Our first DAG',
+    schedule_interval=timedelta(days=1),
+)
+
+task_1 = BashOperator(
+    task_id='first_task',
+    bash_command="touch /data/teste",
+    dag=my_first_dag,
+)
+task_2 = BashOperator(
+    task_id='second_task',
+    bash_command='echo 2',
+    dag=my_first_dag,
+)
+
+task_1.set_downstream(task_2)

@@ -26,6 +26,7 @@ services:
             - ./dags:/opt/airflow/dags
             - ./scripts:/opt/airflow/scripts
             - ./logs:/opt/airflow/logs
+            - ./data:/data
         ports:
             - "8080:8080"
         entrypoint: ./scripts/entrypoint.sh
@@ -47,6 +48,7 @@ services:
         volumes:
             - ./dags:/opt/airflow/dags
             - ./logs:/opt/airflow/logs
+            - ./data:/data
         command: scheduler
         healthcheck:
             test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]

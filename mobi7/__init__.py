@@ -1,10 +1,15 @@
-import os.path as path
+from pathlib import Path
 import pandas as pd
 from geopy.distance import geodesic
 
 
-def get_data():
+def get_data(dir_path='./data'):
     """Get all data from the CSV files.
+
+    Parameters
+    ----------
+    path : str
+        The data path
 
     Returns
     -------
@@ -19,11 +24,29 @@ def get_data():
     cons : pd.DataFrame or None
         A data frame with the analysis result (if the file exists).
     """
-    pos = pd.read_csv('data/posicoes.csv')
-    poi = pd.read_csv('data/base_pois_def.csv')
+    dir_path = Path(dir_path)
+    if not dir_path.is_dir():
+        raise NotADirectoryError('The `dir` must be a directory.')
+
+    pos_file = dir_path.joinpath('posicoes.csv')
+    poi_file = dir_path.joinpath('base_pois_def.csv')
+    res_file = dir_path.joinpath('resultados_consolidado_POIs.csv')
+
+    if not pos_file.exists():
+        full = str(pos_file.absolute())
+        raise FileNotFoundError(f'The positions file `{full}` was not found.')
+    
+    if not poi_file.exists():
+        full = str(poi_file.absolute())
+        raise FileNotFoundError(f'The POIs file `{full}` was not found.')
+
+    pos = pd.read_csv(pos_file)
+    poi = pd.read_csv(poi_file)
+
     cons = None
-    if path.exists('data/resultados_consolidado_POIs.csv'):
-        cons = pd.read_csv('data/resultados_consolidado_POIs.csv')
+    if res_file.exists():
+        cons = pd.read_csv(res_file)
+
     return pos, poi, cons
 
 
@@ -193,11 +216,14 @@ def aggregate_positions_with_time(positions_with_time, car):
     return df
 
 
-def consolidate_results(provided_poi=None, save_file=True):
+def consolidate_results(dir_path='./data', provided_poi=None, save_file=True):
     """Create a CSV file with the results consolidated.
 
     Parameters
     ----------
+    path : str
+        The data path
+
     provided_poi : pd.DataFrame or None
         A data frame with the position of interest with radius and
         coordinates. This will override the POIs CSV file.
@@ -211,7 +237,7 @@ def consolidate_results(provided_poi=None, save_file=True):
         A dataframe with the total and stopped time spent by each car in each
         POI.
     """
-    pos, poi, _ = get_data()
+    pos, poi, _ = get_data(dir_path)
     if provided_poi is not None:
         poi = provided_poi
 
@@ -228,10 +254,7 @@ def consolidate_results(provided_poi=None, save_file=True):
                 drop('index', axis=1)
     
     if save_file:
-        res.to_csv('data/resultados_consolidado_POIs.csv')
+        dir_path = Path(dir_path)
+        res.to_csv(dir_path.joinpath('resultados_consolidado_POIs.csv'))
 
     return res
-
-
-if __name__ == '__main__':
-    consolidate_results()

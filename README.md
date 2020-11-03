@@ -17,6 +17,8 @@
 ```pip install -r requirements.txt```
 4. Run the application:
 ```python app.py```
+5. If you need to consolidate the results, use:
+```python app.py --consolidate```
 
 ## Open the dashboard
 1. Access through your browser:
@@ -26,3 +28,4 @@
 ## References
 - https://towardsdatascience.com/apache-airflow-and-postgresql-with-docker-and-docker-compose-5651766dfa96
 - https://dzone.com/articles/running-apache-airflow-dag-with-docker
+- https://blog.invivoo.com/creating-your-first-apache-airflow-dag/

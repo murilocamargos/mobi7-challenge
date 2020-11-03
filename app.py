@@ -1,19 +1,20 @@
 import os
+import sys
 from flask import Flask
 from flask import render_template
 from flask import jsonify
 from flask import request
 import pandas as pd
 import numpy as np
-from consolidate import get_data, feature_eng, consolidate_results
-from utils import zoom_center
+from mobi7 import get_data, feature_eng, consolidate_results
+from mobi7.utils import zoom_center
 
 
 app = Flask(__name__)
 
 
 # Global variables with all the data we need for the dashboard
-pos, poi, cons = get_data()
+pos, poi, cons = get_data('./data')
 pos = feature_eng(pos, poi, add_pois=False)
 
 
@@ -125,6 +126,9 @@ def api_get_time():
 
 
 if __name__ == "__main__":
+    if '--consolidate' in sys.argv:
+        consolidate_results('./data')
+
     app.run(
         host=os.environ.get("BACKEND_HOST", "127.0.0.1"),
         port=5000,
