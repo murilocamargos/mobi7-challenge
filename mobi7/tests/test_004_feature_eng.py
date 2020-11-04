@@ -7,7 +7,6 @@ from ..funcs import feature_eng, POS_FIELDS
 from .helpers import get_valid_position, get_valid_poi, get_poi_pos
 
 
-@pytest.mark.run(order=13)
 def test_feature_eng_columns():
     poi, pos = get_poi_pos()
     pos = feature_eng(pos, poi, add_pois=True)
@@ -16,14 +15,12 @@ def test_feature_eng_columns():
     assert len(set(pos.columns).difference(set(POS_FIELDS_ALT))) == 0
 
 
-@pytest.mark.run(order=14)
 def test_feature_eng_column_parado():
     poi, pos = get_poi_pos()
     pos = feature_eng(pos, poi, add_pois=True)
     assert (pos.parado == [False if i in [2,3] else True for i in range(10)]).all()
 
 
-@pytest.mark.run(order=15)
 def test_feature_eng_column_tempo_parado_e_andando():
     poi, pos = get_poi_pos()
     pos = feature_eng(pos, poi, add_pois=True)
@@ -37,7 +34,6 @@ def test_feature_eng_column_tempo_parado_e_andando():
     assert (pos.tempo_andando == moving).all()
 
 
-@pytest.mark.run(order=16)
 def test_feature_eng_find_pois():
     poi, pos = get_poi_pos()
     pos = feature_eng(pos, poi, add_pois=True)

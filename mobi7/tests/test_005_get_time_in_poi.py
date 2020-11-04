@@ -7,7 +7,6 @@ from ..funcs import feature_eng, get_time_in_poi, POS_FIELDS
 from .helpers import get_valid_position, get_valid_poi, get_poi_pos
 
 
-@pytest.mark.run(order=17)
 def test_get_time_in_poi():
     poi, pos = get_poi_pos()
     pos = feature_eng(pos, poi, add_pois=True)

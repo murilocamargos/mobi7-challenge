@@ -7,7 +7,6 @@ from ..funcs import find_pois
 from .helpers import get_valid_position, get_valid_poi
 
 
-@pytest.mark.run(order=12)
 def test_find_pois():
     poi = get_valid_poi(2)
     poi.loc[1, 'latitude'] += 0.004
