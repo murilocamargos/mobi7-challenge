@@ -7,6 +7,7 @@ from ..funcs import get_data, POS_FIELDS, POI_FIELDS, RES_FIELDS
 from .helpers import move_files_to_temp_folder
 
 
+@pytest.mark.run(order=8)
 def test_get_data_pos_and_poi(tmp_path):
     move_files_to_temp_folder(tmp_path, True, True, True)
     pos, poi, cons = get_data(str(tmp_path.absolute()))
@@ -21,12 +22,14 @@ def test_get_data_pos_and_poi(tmp_path):
     assert (cons.columns == RES_FIELDS).all()
 
 
+@pytest.mark.run(order=9)
 def test_get_data_dir_not_exists():
     with pytest.raises(NotADirectoryError) as err:
         get_data('./non-existing-dir')
     assert str(err.value) == 'The `dir` must be a directory.'
 
 
+@pytest.mark.run(order=10)
 def test_get_data_pos_file_dont_exist(tmp_path):
     move_files_to_temp_folder(tmp_path, False, True, True)
     path = str(tmp_path.absolute())
@@ -37,6 +40,7 @@ def test_get_data_pos_file_dont_exist(tmp_path):
     assert str(err.value) == f'The positions file `{full}` was not found.'
 
 
+@pytest.mark.run(order=11)
 def test_get_data_poi_file_dont_exist(tmp_path):
     move_files_to_temp_folder(tmp_path, True, False, True)
     path = str(tmp_path.absolute())

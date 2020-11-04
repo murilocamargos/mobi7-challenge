@@ -7,6 +7,7 @@ from ..funcs import check_numeric, check_data, POI_FIELDS, POS_FIELDS
 from .helpers import get_valid_position, get_valid_poi
 
 
+@pytest.mark.run(order=1)
 def test_check_numeric_type():
     position = get_valid_position()
     position.latitude = None
@@ -21,6 +22,7 @@ def test_check_numeric_type():
     assert str(err.value) == 'The `position` field must be numeric.'
 
 
+@pytest.mark.run(order=2)
 def test_check_numeric_intv():
     position = get_valid_position()
     position.latitude = 91
@@ -35,6 +37,7 @@ def test_check_numeric_intv():
     assert str(err.value) == 'All `position` values must be in [-90,90].'
 
 
+@pytest.mark.run(order=3)
 def test_check_data_as_check():
     position = get_valid_position()
     with pytest.raises(ValueError) as err:
@@ -42,6 +45,7 @@ def test_check_data_as_check():
     assert str(err.value) == 'Please, choose a valid type.'
 
 
+@pytest.mark.run(order=4)
 def test_check_data_types():
     with pytest.raises(TypeError) as err:
         check_data({'teste': 1}, 'position', POS_FIELDS, check_as='sr')
@@ -52,6 +56,7 @@ def test_check_data_types():
     assert str(err.value) == 'The variable `position` must be a DataFrame.'
 
 
+@pytest.mark.run(order=5)
 def test_check_data_removing_fields():
     position = get_valid_position()
     position = position.drop('latitude')
@@ -68,6 +73,7 @@ def test_check_data_removing_fields():
                             f'fields: {POS_FIELDS}'
 
 
+@pytest.mark.run(order=6)
 def test_check_data_check_pos_lat_lon():
     position = get_valid_position()
     position.latitude = 91
@@ -106,6 +112,7 @@ def test_check_data_check_pos_lat_lon():
     assert str(err.value) == 'The `ignicao` field must be boolean.'
 
 
+@pytest.mark.run(order=7)
 def test_check_data_check_poi_lat_lon_rad():
     poi = get_valid_poi()
     poi.latitude = 91
