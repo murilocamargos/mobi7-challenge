@@ -24,6 +24,10 @@ source mobi7/bin/activate  # Linux
 4. Run the application: `python app.py`
 5. This mode **does not** use airflow to consolidate data. You'll need to do it manually using: `python app.py --consolidate`
 6. Dashboard can be accessed at: [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
+7. The application can be tested using the following command:
+```
+pytest --ignore=logs -v
+```
 
 ## References
 - Docs from: Flask, Docker, Bootstrap, jQuery, Apache Airflow.

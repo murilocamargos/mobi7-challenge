@@ -22,8 +22,8 @@ def get_poi_pos_features():
         position.loc[i, 'latitude'] = position.loc[i-1, 'latitude'] + 0.0008
         position.loc[i, 'data_posicao'] = dp[:19] + str(mins).zfill(2) + dp[21:]
     
-    position.loc[2, 'velocidade'] = 10
-    position.loc[3, 'ignicao'] = True
+    position.loc[2, 'velocidade'] = 10  # Change state to moving
+    position.loc[3, 'ignicao'] = True   # Keep moving state
     
     return feature_eng(position, poi, add_pois=True)
 
@@ -39,6 +39,14 @@ def test_feature_eng_column_parado():
     pos = get_poi_pos_features()
     assert (pos.parado == [False if i in [2,3] else True for i in range(10)]).all()
 
-def test_feature_eng_column_tempo_parado():
+
+def test_feature_eng_column_tempo_parado_e_andando():
     pos = get_poi_pos_features()
-    assert (pos.tempo_parado == [False if i in [2,2] else True for i in range(10)]).all()
+    # If the state was changed from stoped to moving at k=2, keep moving at
+    # k=3, and changed back to stoped at k=4, and considering 120 seconds
+    # between measurements, the time spent in each bin will be:
+    stoped = [0, 120, 60, 0, 60, 120, 120, 120, 120, 120]
+    moving = [0, 0, 60, 120, 60, 0, 0, 0, 0, 0]
+
+    assert (pos.tempo_parado == stoped).all()
+    assert (pos.tempo_andando == moving).all()
