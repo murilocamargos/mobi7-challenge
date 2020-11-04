@@ -54,8 +54,8 @@ def check_data(data, var_name, fields, check_as='df'):
         data_fields = data.columns
         data_shape = data.shape[1]
 
-    if data_shape != len(fields) or (data_shape != len(fields) and\
-        not (sorted(data_fields) == sorted(fields)).all()):
+    if data_shape < len(fields) or (data_shape < len(fields) and\
+        not len(set(fields).difference(set(data_fields))) == 0):
         raise ValueError(f'The `{var_name}` {types[check_as].__name__} '\
                          f'should have the following fields: {fields}')
     
@@ -195,11 +195,22 @@ def feature_eng(pos, poi, add_pois=False):
         pos.loc[pos['placa'] == placa, 'tempo'] = pos[pos['placa'] == placa].\
             data_posicao.diff().apply(lambda x: x.seconds)
 
-    # Compute stopped and moving times
+    # Compute stopped and moving times. The policy for doing that considers the
+    # vehicle states (stopped/moving) from a previous position and the current
+    # one. If the vehicle's state does not change, assign all ellpsed time to
+    # one of the buckets. Otherwise, split the time between the two buckets.
     pos['tempo_parado'] = 0
     pos['tempo_andando'] = 0
-    pos.loc[pos.parado, 'tempo_parado'] = pos[pos.parado].tempo
-    pos.loc[~pos.parado, 'tempo_andando'] = pos[~pos.parado].tempo
+    for i in range(1, pos.shape[0]):
+        state_im1 = pos.loc[i-1, 'parado']
+        state_i = pos.loc[i, 'parado']
+        if state_i != state_im1:
+            pos.loc[i, 'tempo_parado'] = pos.loc[i, 'tempo']/2
+            pos.loc[i, 'tempo_andando'] = pos.loc[i, 'tempo']/2
+        elif state_i == True:
+            pos.loc[i, 'tempo_parado'] = pos.loc[i, 'tempo']
+        else:
+            pos.loc[i, 'tempo_andando'] = pos.loc[i, 'tempo']
 
     # Find POIs where the car has been
     if add_pois:
