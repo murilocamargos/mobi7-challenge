@@ -308,6 +308,39 @@ def aggregate_positions_with_time(positions_with_time, car):
     return df
 
 
+def get_results(pos, poi):
+    """Get consolidated results.
+
+    Parameters
+    ----------
+    pos : pd.DataFrame
+        A data frame with the available position and state measurements
+        from all vehicles.
+    
+    poi : pd.DataFrame
+        A data frame with all positions of interest with name, radius and
+        coordinates.
+    
+    Returns
+    -------
+    res : pd.DataFrame
+        A dataframe with the total and stopped time spent by each car in each
+        POI.
+    """
+    pos = feature_eng(pos, poi, add_pois=True)
+    res = None
+    for car in pos.placa.unique():
+        positions_with_time = get_time_in_poi(car, pos, poi)
+        car_at_pois = aggregate_positions_with_time(positions_with_time, car)
+        
+        if res is None:
+            res = car_at_pois
+        else:
+            res = pd.concat((res, car_at_pois), axis=0).reset_index().\
+                drop('index', axis=1)
+    return res
+
+
 def consolidate_results(dir_path='./data', provided_poi=None, save_file=True):
     """Create a CSV file with the results consolidated.
 
@@ -333,17 +366,7 @@ def consolidate_results(dir_path='./data', provided_poi=None, save_file=True):
     if provided_poi is not None:
         poi = provided_poi
 
-    pos = feature_eng(pos, poi, add_pois=True)
-    res = None
-    for car in pos.placa.unique():
-        positions_with_time = get_time_in_poi(car, pos, poi)
-        car_at_pois = aggregate_positions_with_time(positions_with_time, car)
-        
-        if res is None:
-            res = car_at_pois
-        else:
-            res = pd.concat((res, car_at_pois), axis=0).reset_index().\
-                drop('index', axis=1)
+    res = get_results(pos, poi)
     
     if save_file:
         dir_path = Path(dir_path)

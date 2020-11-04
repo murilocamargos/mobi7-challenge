@@ -12,8 +12,10 @@ from mobi7.blueprint import dash_blueprint
 
 
 # Global variables with all the data we need for the dashboard
-pos, poi, cons = get_data('./data')
-pos = feature_eng(pos, poi, add_pois=False)
+def get_dash_data():
+    pos, poi, cons = get_data('./data')
+    pos = feature_eng(pos, poi, add_pois=False)
+    return pos, poi, cons
 
 
 @dash_blueprint.route("/")
@@ -22,6 +24,7 @@ def index():
     Renders the dashboard's initial page with the positions table, the POIs
     table, the best zoom and center for all POIs, and the MapBox API token.
     """
+    pos, poi, cons = get_dash_data()
     zoom, center = zoom_center(list(poi.longitude.values),
         list(poi.latitude.values))
     return render_template('index.html', pos=pos, poi=poi, zoom=zoom,
@@ -34,13 +37,17 @@ def api_get_path():
     API endpoint to obtain the full route by vehicle. Also finds the best zoom
     and center to display the route.
     """
+    pos, _, _ = get_dash_data()
     placa = request.args.get('placa')
-    df = pos.loc[pos.placa == placa]    
+    df = pos.loc[pos.placa == placa]
+
+    if df.shape[0] == 0:
+        return jsonify({'error': 'Car not found.'}), 404
+
     res = {'latlon': [], 'zoom': 1, 'center': [0, 0]}
 
-    if df.shape[0] > 0:
-        df = df.sort_values(by='data_posicao')
-        res['latlon'] = df[['latitude', 'longitude']].values.tolist()
+    df = df.sort_values(by='data_posicao')
+    res['latlon'] = df[['latitude', 'longitude']].values.tolist()
     
     res['zoom'], res['center'] = zoom_center(list(df.longitude.values), list(df.latitude.values))
 
@@ -53,6 +60,7 @@ def api_consolidated():
     API endpoint to get consolidated results to reach the functional
     requirements.
     """
+    pos, poi, cons = get_dash_data()
     if cons is None:
         return jsonify(False)
 
@@ -95,7 +103,6 @@ def api_check_consolidated():
     API endpoint to check if the consolidated CSV file exists. If it exists,
     load it to a global variable.
     """
-    global cons
     _, _, cons = get_data()
     return jsonify(cons is not None)
 
@@ -106,6 +113,7 @@ def api_get_time():
     API endpoint to get the total and stopped time spent by each vehicle in a
     POIs selected by the user in real-time.
     """
+    pos, poi, cons = get_dash_data()
     params = {
         'lat': request.args.get('lat'),
         'lon': request.args.get('lon'),
