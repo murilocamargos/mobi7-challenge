@@ -37,3 +37,24 @@ def get_valid_poi(n=1):
     if n == 1:
         return pd.Series(pois[0])
     return pd.DataFrame(pois)
+
+
+def get_poi_pos():
+    poi = get_valid_poi(2)
+    poi.loc[1, 'latitude'] += 0.004
+    poi.loc[1, 'nome'] = 'PONTO 2'
+    
+    position = get_valid_position(10)
+    position.latitude = poi.latitude[0]
+    position.longitude = poi.longitude[0]
+    mins = 4
+    for i in range(1,10):
+        mins += 2
+        dp = position.loc[i, 'data_posicao']
+        position.loc[i, 'latitude'] = position.loc[i-1, 'latitude'] + 0.0008
+        position.loc[i, 'data_posicao'] = dp[:19] + str(mins).zfill(2) + dp[21:]
+    
+    position.loc[2, 'velocidade'] = 10  # Change state to moving
+    position.loc[3, 'ignicao'] = True   # Keep moving state
+    
+    return poi, position
