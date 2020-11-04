@@ -50,3 +50,17 @@ def test_feature_eng_column_tempo_parado_e_andando():
 
     assert (pos.tempo_parado == stoped).all()
     assert (pos.tempo_andando == moving).all()
+
+
+def test_feature_eng_find_pois():
+    pos = get_poi_pos_features()
+    # POI 1 and 2 have the same radius: 350m. POI 2 center is approximately
+    # 445m away from POI 1 center in latitude. The vehicle starts from POI 1
+    # center and moves towards POI 2 center in and approximate rate of 90m
+    # per measurement.
+    # Therefore, the POIs would be:
+    
+    pois = ['PONTO 1', 'PONTO 1', 'PONTO 1,PONTO 2', 'PONTO 1,PONTO 2',
+            'PONTO 2', 'PONTO 2', 'PONTO 2', 'PONTO 2', 'PONTO 2', 'Nenhum']
+    
+    assert (pos.POIs == pois).all()

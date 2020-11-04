@@ -35,7 +35,7 @@ pytest --ignore=logs -v
 ```
 
 ## References
-- Docs from: Flask, Docker, Bootstrap, jQuery, Apache Airflow.
+- Docs from: Python, Pytest, Flask, Docker, Bootstrap, jQuery, Apache Airflow.
 - https://towardsdatascience.com/apache-airflow-and-postgresql-with-docker-and-docker-compose-5651766dfa96
 - https://dzone.com/articles/running-apache-airflow-dag-with-docker
 - https://blog.invivoo.com/creating-your-first-apache-airflow-dag/
