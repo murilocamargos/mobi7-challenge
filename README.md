@@ -12,6 +12,11 @@
 1. Run the docker-compose command: `docker-compose up`
 2. Data can be consolidated through `airflow` admin at: [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
 3. Dashboard can be accessed at: [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
+4. The application can be tested using the following command:
+```
+docker exec -it mobi7-challenge_web_1 pytest -v
+```
+Please, note that the `mobi7-challenge_web_1` container name may change.
 
 #### 1.2.2. Without airflow
 1. Create a virtual environment with **python 3.8**: `python -m venv mobi7`
