@@ -60,7 +60,7 @@ def api_consolidated():
     API endpoint to get consolidated results to reach the functional
     requirements.
     """
-    pos, poi, cons = get_dash_data()
+    _, _, cons = get_dash_data()
     if cons is None:
         return jsonify(False)
 

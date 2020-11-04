@@ -35,3 +35,29 @@ def test_dash_api_get_path_with_plate(mocker, client):
     assert cli.json['latlon'] == latlon
     assert cli.json['center'] == center
     assert cli.json['zoom'] == zoom
+
+
+def test_dash_api_consolidated(mocker, client):
+    # Total and stopped time spent by each vehicle aggregated by the POIs
+    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data())
+    cli = client.get(url_for('dash.api_consolidated'))
+    assert cli.status_code == 200
+    assert cli.json['poi'] == ['Nenhum', 'PONTO 1', 'PONTO 2']
+    assert cli.json['parado'] == [0, 0.06, 0.06]
+    assert cli.json['total'] == [0.02, 0.12, 0.23]
+
+    # Total and stopped time spent in each POI for a given vehicle
+    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data())
+    cli = client.get(url_for('dash.api_consolidated', placa='TESTE001'))
+    assert cli.status_code == 200
+    assert cli.json['poi'] == ['Nenhum', 'PONTO 1', 'PONTO 2']
+    assert cli.json['parado'] == [0, 0.06, 0.06]
+    assert cli.json['total'] == [0.02, 0.12, 0.23]
+
+    # Total and stopped time spent in each POI aggregated by the vehicles
+    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data())
+    cli = client.get(url_for('dash.api_consolidated', bycar=True))
+    assert cli.status_code == 200
+    assert cli.json['placa'] == ['TESTE001']
+    assert cli.json['parado'] == [0.12]
+    assert cli.json['total'] == [0.37]
