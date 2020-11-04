@@ -12,9 +12,10 @@ from mobi7.blueprint import dash_blueprint
 
 
 # Global variables with all the data we need for the dashboard
-def get_dash_data():
+def get_dash_data(feat_eng=True):
     pos, poi, cons = get_data('./data')
-    pos = feature_eng(pos, poi, add_pois=False)
+    if feat_eng:
+        pos = feature_eng(pos, poi, add_pois=False)
     return pos, poi, cons
 
 
@@ -103,7 +104,7 @@ def api_check_consolidated():
     API endpoint to check if the consolidated CSV file exists. If it exists,
     load it to a global variable.
     """
-    _, _, cons = get_data()
+    _, _, cons = get_dash_data(False)
     return jsonify(cons is not None)
 
 

@@ -11,6 +11,11 @@ def mock_get_dash_data():
     res = get_results(pos, poi)
     return pos, poi, res
 
+def mock_get_dash_data_wc():
+    # Without res
+    poi, pos, _ = mock_get_dash_data()
+    return pos, poi, None
+
 
 def test_dash_api_get_path_without_plate(client):
     cli = client.get(url_for('dash.api_get_path'))
@@ -47,7 +52,6 @@ def test_dash_api_consolidated(mocker, client):
     assert cli.json['total'] == [0.02, 0.12, 0.23]
 
     # Total and stopped time spent in each POI for a given vehicle
-    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data())
     cli = client.get(url_for('dash.api_consolidated', placa='TESTE001'))
     assert cli.status_code == 200
     assert cli.json['poi'] == ['Nenhum', 'PONTO 1', 'PONTO 2']
@@ -55,9 +59,20 @@ def test_dash_api_consolidated(mocker, client):
     assert cli.json['total'] == [0.02, 0.12, 0.23]
 
     # Total and stopped time spent in each POI aggregated by the vehicles
-    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data())
     cli = client.get(url_for('dash.api_consolidated', bycar=True))
     assert cli.status_code == 200
     assert cli.json['placa'] == ['TESTE001']
     assert cli.json['parado'] == [0.12]
     assert cli.json['total'] == [0.37]
+
+
+def test_dash_check_consolidated(mocker, client):
+    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data())
+    cli = client.get(url_for('dash.api_check_consolidated'))
+    assert cli.status_code == 200
+    assert cli.json == True
+
+    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data_wc())
+    cli = client.get(url_for('dash.api_check_consolidated'))
+    assert cli.status_code == 200
+    assert cli.json == False
