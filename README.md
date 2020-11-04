@@ -14,7 +14,7 @@
 3. Dashboard can be accessed at: [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
 4. The application can be tested using the following command:
 ```
-docker exec -it mobi7-challenge_web_1 pytest -v
+docker exec -it -e PYTHONPATH=. mobi7-challenge_web_1 pytest -v
 ```
 Please, note that the `mobi7-challenge_web_1` container name may change.
 
@@ -42,3 +42,5 @@ pytest --ignore=logs -v
 - https://stackoverflow.com/questions/58762323/how-to-use-pythonvirtualenvoperator-in-airflow
 - https://github.com/puckel/docker-airflow/issues/101
 - https://en.wikipedia.org/wiki/Decimal_degrees
+- https://stackoverflow.com/questions/54895002/modulenotfounderror-with-pytest
+- https://gitlab.com/patkennedy79/flask_user_management_example

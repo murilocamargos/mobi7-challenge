@@ -7,8 +7,8 @@
         <meta name="description" content="" />
         <meta name="author" content="" />
         <title>Mobi7 Dashboard</title>
-        <link href="/static/css/styles.css" rel="stylesheet" />
-        <link href="/static/css/jquery-ui.css" rel="stylesheet" />
+        <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
+        <link href="{{ url_for('static', filename='css/jquery-ui.css') }}" rel="stylesheet" />
         <link href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css" rel="stylesheet" crossorigin="anonymous" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -25,7 +25,7 @@
     </head>
     <body class="sb-nav-fixed">
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Mobi7 Dash</a>
+            <a class="navbar-brand" href="{{ url_for('dash.index') }}">Mobi7 Dash</a>
         </nav>
         <div id="layoutSidenav">
             <div id="layoutSidenav_nav">
@@ -33,7 +33,7 @@
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading">Core</div>
-                            <a class="nav-link" href="{{ url_for('index') }}">
+                            <a class="nav-link" href="{{ url_for('dash.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 Dashboard
                             </a>
@@ -257,27 +257,27 @@
             var changeTimeView = function(opt) {
                 if (opt == '1') {
                     // Frota inteira por POI
-                    $.get("{{ url_for('api_consolidated') }}", function(data) {
+                    $.get("{{ url_for('dash.api_consolidated') }}", function(data) {
                         updateBarPlot('consolidated', data, 'poi', 'Tempo total da frota gasto em cada POI (em horas)');
                     });
                 }
                 else if (opt == '2') {
                     // Frota inteira por veículo
-                    $.get("{{ url_for('api_consolidated') }}", {bycar: true}, function(data) {
+                    $.get("{{ url_for('dash.api_consolidated') }}", {bycar: true}, function(data) {
                         updateBarPlot('consolidated', data, 'placa', 'Tempo total da frota gasto por cada veículo (em horas)');
                     });
                 }
                 else {
                     // Por carro
                     var car = opt;
-                    $.get("{{ url_for('api_consolidated') }}", {placa: car}, function(data) {
+                    $.get("{{ url_for('dash.api_consolidated') }}", {placa: car}, function(data) {
                         updateBarPlot('consolidated', data, 'poi', 'Tempo total do carro ' + car + ' gasto em cada POI (em horas)');
                     });
                 }
             };
 
             var checkConsolidated = function() {
-                $.get("{{ url_for('api_check_consolidated') }}", function(data) {
+                $.get("{{ url_for('dash.api_check_consolidated') }}", function(data) {
                     if (data === false) {
                         $('#consolidatedSuccess').hide();
                         $('#consolidatedError').show();
@@ -302,7 +302,7 @@
 
             $(function(){
                 $('#selectCar').change(function() {
-                    $.get("{{ url_for('api_get_path') }}", { placa: $('#selectCar').val() }, function(data) {
+                    $.get("{{ url_for('dash.api_get_path') }}", { placa: $('#selectCar').val() }, function(data) {
                         if (window.roadPath !== null) {
                             window.roadPath.remove();
                         }
@@ -380,7 +380,7 @@
 
                         $('#carOnChosenPOILoader').show();
 
-                        $.get("{{ url_for('api_get_time') }}", {lat: coords[0], lon: coords[1], rad: radius}, function(data) {
+                        $.get("{{ url_for('dash.api_get_time') }}", {lat: coords[0], lon: coords[1], rad: radius}, function(data) {
                             if (data['parado'].length != 0) {
                                 $('#carNotFoundOnChosenPOI').hide();
                                 $('#carFoundOnChosenPOI').show();

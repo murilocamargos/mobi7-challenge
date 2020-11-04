@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from ..funcs import find_pois
+from mobi7.funcs import find_pois
 from .helpers import get_valid_position, get_valid_poi
 
 

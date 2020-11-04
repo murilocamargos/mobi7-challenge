@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from ..funcs import feature_eng, get_time_in_poi, POS_FIELDS,\
+from mobi7.funcs import feature_eng, get_time_in_poi, POS_FIELDS,\
                     aggregate_positions_with_time
 from .helpers import get_valid_position, get_valid_poi, get_poi_pos
 

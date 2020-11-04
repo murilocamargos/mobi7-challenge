@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from ..funcs import check_numeric, check_data, POI_FIELDS, POS_FIELDS
+from mobi7.funcs import check_numeric, check_data, POI_FIELDS, POS_FIELDS
 from .helpers import get_valid_position, get_valid_poi
 
 

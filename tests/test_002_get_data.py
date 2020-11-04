@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from ..funcs import get_data, POS_FIELDS, POI_FIELDS, RES_FIELDS
+from mobi7.funcs import get_data, POS_FIELDS, POI_FIELDS, RES_FIELDS
 from .helpers import move_files_to_temp_folder
 
 
