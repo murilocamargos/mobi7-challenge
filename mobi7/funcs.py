@@ -327,7 +327,7 @@ def get_results(pos, poi):
         A dataframe with the total and stopped time spent by each car in each
         POI.
     """
-    pos = feature_eng(pos, poi, add_pois=True)
+    pos = feature_eng(pos.copy(), poi, add_pois=True)
     res = None
     for car in pos.placa.unique():
         positions_with_time = get_time_in_poi(car, pos, poi)
