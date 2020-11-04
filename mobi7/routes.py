@@ -6,7 +6,7 @@ from flask import jsonify
 from flask import request
 import pandas as pd
 import numpy as np
-from mobi7.funcs import get_data, feature_eng, consolidate_results
+from mobi7.funcs import get_data, feature_eng, consolidate_results, get_results
 from mobi7.utils import zoom_center
 from mobi7.blueprint import dash_blueprint
 
@@ -114,7 +114,7 @@ def api_get_time():
     API endpoint to get the total and stopped time spent by each vehicle in a
     POIs selected by the user in real-time.
     """
-    pos, poi, cons = get_dash_data()
+    pos, _, _ = get_dash_data()
     params = {
         'lat': request.args.get('lat'),
         'lon': request.args.get('lon'),
@@ -125,12 +125,12 @@ def api_get_time():
         try:
             params[p] = float(params[p])
         except:
-            return jsonify({'error': f'The `{p}` argument must be numeric.'})
+            return jsonify({'error': f'The `{p}` argument must be numeric.'}), 404
 
     poi = pd.DataFrame([{'nome': 'POI Escolhido', 'raio': params['rad'],\
         'latitude': params['lat'], 'longitude': params['lon']}])
 
-    cons = consolidate_results(provided_poi=poi, save_file=False)
+    cons = get_results(pos.copy(), poi)
     cons = cons.loc[cons.poi == 'POI Escolhido']
 
     df = cons.groupby('placa').sum()

@@ -8,8 +8,9 @@ from .helpers import get_poi_pos
 
 def mock_get_dash_data():
     poi, pos = get_poi_pos()
-    res = get_results(pos, poi)
+    res = get_results(pos.copy(), poi.copy())
     return pos, poi, res
+
 
 def mock_get_dash_data_wc():
     # Without res
@@ -76,3 +77,35 @@ def test_dash_check_consolidated(mocker, client):
     cli = client.get(url_for('dash.api_check_consolidated'))
     assert cli.status_code == 200
     assert cli.json == False
+
+
+def test_dash_api_get_time(mocker, client):
+    # Total and stopped time spent by each vehicle aggregated by the POIs
+    mocker.patch("mobi7.routes.get_dash_data", return_value=mock_get_dash_data())
+    cli = client.get(url_for('dash.api_get_time'))
+    assert cli.status_code == 404
+    assert cli.json == {'error': 'The `lat` argument must be numeric.'}
+
+    cli = client.get(url_for('dash.api_get_time', lat=-25.56502701740895))
+    assert cli.status_code == 404
+    assert cli.json == {'error': 'The `lon` argument must be numeric.'}
+
+    cli = client.get(url_for('dash.api_get_time', lat=-25.56502701740895,
+                             lon=-51.47653363645077))
+    assert cli.status_code == 404
+    assert cli.json == {'error': 'The `rad` argument must be numeric.'}
+
+    cli = client.get(url_for('dash.api_get_time', lat=-25.56502701740895-0.004,
+                             lon=-51.47653363645077, rad=100))
+    assert cli.status_code == 200
+    assert cli.json == {'parado': [], 'placa': [], 'total': []}
+
+    cli = client.get(url_for('dash.api_get_time', lat=-25.56502701740895-0.004,
+                             lon=-51.47653363645077, rad=500))
+    assert cli.status_code == 200
+    assert cli.json == {'parado': [0.06], 'placa': ['TESTE001'], 'total': [0.12]}
+
+    cli = client.get(url_for('dash.api_get_time', lat=-25.56502701740895-0.004,
+                             lon=-51.47653363645077, rad=1000))
+    assert cli.status_code == 200
+    assert cli.json == {'parado': [0.07], 'placa': ['TESTE001'], 'total': [0.3]}
