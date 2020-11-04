@@ -12,7 +12,9 @@ from mobi7.blueprint import dash_blueprint
 
 
 # Global variables with all the data we need for the dashboard
-def get_dash_data(feat_eng=True):
+def get_dash_data(cached=True, feat_eng=True):
+    if cached:
+        return current_app.files[0], current_app.files[1], current_app.files[2]
     pos, poi, cons = get_data('./data')
     if feat_eng:
         pos = feature_eng(pos.copy(), poi.copy(), add_pois=False)
@@ -25,9 +27,7 @@ def index():
     Renders the dashboard's initial page with the positions table, the POIs
     table, the best zoom and center for all POIs, and the MapBox API token.
     """
-    pos = current_app.files[0].copy()
-    poi = current_app.files[1].copy()
-    cons = current_app.files[2].copy()
+    pos, poi, cons = get_dash_data()
 
     zoom, center = zoom_center(list(poi.longitude.values),
         list(poi.latitude.values))
@@ -41,7 +41,7 @@ def api_get_path():
     API endpoint to obtain the full route by vehicle. Also finds the best zoom
     and center to display the route.
     """
-    pos = current_app.files[0].copy()
+    pos, _, _ = get_dash_data()
     placa = request.args.get('placa')
     df = pos.loc[pos.placa == placa]
 
@@ -64,7 +64,7 @@ def api_consolidated():
     API endpoint to get consolidated results to reach the functional
     requirements.
     """
-    cons = current_app.files[2].copy()
+    _, _, cons = get_dash_data()
     if cons is None:
         return jsonify(False)
 
@@ -107,7 +107,7 @@ def api_check_consolidated():
     API endpoint to check if the consolidated CSV file exists. If it exists,
     load it to a global variable.
     """
-    _, _, cons = get_dash_data(False)
+    _, _, cons = get_dash_data(False, False)
     if cons is not None:
         current_app.files = (current_app.files[0], current_app.files[1], cons)
     return jsonify(cons is not None)
@@ -119,7 +119,7 @@ def api_get_time():
     API endpoint to get the total and stopped time spent by each vehicle in a
     POIs selected by the user in real-time.
     """
-    pos, _, _ = get_dash_data(feat_eng=False)
+    pos, _, _ = get_dash_data(False, False)
     params = {
         'lat': request.args.get('lat'),
         'lon': request.args.get('lon'),
