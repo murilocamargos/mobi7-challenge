@@ -246,33 +246,32 @@ def get_time_in_poi(car, pos, poi):
     """
     # Use the fraction of the dataset related to the car
     pos_car = pos[pos.placa == car].reset_index().drop('index', axis=1)
+
     # List of all positions with time in sequence
     positions_with_time = []
     # Process each position measurement against the POIs
     curr_pos_with_time = [pos_car.POIs[0], 0, 0]
+
     for i in range(1, pos_car.shape[0]):
-        if pos_car.POIs[i] == curr_pos_with_time[0]:
-            # If the car didn't get out of the current POI, keep adding time
-            curr_pos_with_time[1] += pos_car.tempo[i]
-            if pos_car.parado[i]:
-                curr_pos_with_time[2] += pos_car.tempo[i]
-        
-        else:
+        if pos_car.loc[i-1, 'POIs'] != pos_car.loc[i, 'POIs']:
             # If the car got out of a POI or entered a different POI
             # split the time elapsed in the measurement between the previous
             # POI and the next one.
-            curr_pos_with_time[1] += pos_car.tempo[i]/2
-            if pos_car.parado[i]:
-                curr_pos_with_time[2] += pos_car.tempo[i]/2
-            
+            curr_pos_with_time[1] += pos_car.loc[i, 'tempo_parado']/2
+            curr_pos_with_time[2] += pos_car.loc[i, 'tempo_andando']/2
             positions_with_time.append(curr_pos_with_time)
+            curr_pos_with_time = [pos_car.POIs[i], 0, 0]
+            curr_pos_with_time[1] += pos_car.loc[i, 'tempo_parado']/2
+            curr_pos_with_time[2] += pos_car.loc[i, 'tempo_andando']/2
+        else:
+            # If the car didn't get out of the current POI, keep adding time
+            curr_pos_with_time[1] += pos_car.loc[i, 'tempo_parado']
+            curr_pos_with_time[2] += pos_car.loc[i, 'tempo_andando']
 
-            curr_pos_with_time = [pos_car.POIs[i], pos_car.tempo[i]/2, 0]
-            if pos_car.parado[i]:
-                curr_pos_with_time[2] += pos_car.tempo[i]/2
-    
-    # Add last car position to the list of POIs
     positions_with_time.append(curr_pos_with_time)
+
+    for i in range(len(positions_with_time)):
+        positions_with_time[i][1] = sum(positions_with_time[i][1:3])
 
     return positions_with_time
 
