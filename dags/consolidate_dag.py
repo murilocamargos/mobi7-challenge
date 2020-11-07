@@ -13,32 +13,10 @@ def consolidate_results():
         A dataframe with the total and stopped time spent by each car in each
         POI.
     """
-    import pandas as pd
-    from pathlib import Path
-    from geopy.distance import geodesic
     import sys
-
     sys.path.insert(0, '/opt/airflow/mobi7')
-    from funcs import get_data, get_time_in_poi, aggregate_positions_with_time, feature_eng
-
-    pos, poi, _ = get_data('/data')
-
-    pos = feature_eng(pos, poi, add_pois=True)
-    res = None
-    for car in pos.placa.unique():
-        positions_with_time = get_time_in_poi(car, pos, poi)
-        car_at_pois = aggregate_positions_with_time(positions_with_time, car)
-        
-        if res is None:
-            res = car_at_pois
-        else:
-            res = pd.concat((res, car_at_pois), axis=0).reset_index().\
-                drop('index', axis=1)
-    
-    dir_path = Path('/data')
-    res.to_csv(dir_path.joinpath('resultados_consolidado_POIs.csv'))
-
-    return res
+    from funcs import consolidate_results
+    consolidate_results(dir_path='/data')
 
 
 # initializing the default arguments that we'll pass to our DAG
